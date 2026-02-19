@@ -1,0 +1,26 @@
+{
+  "name": "ramadam-prompting-nights",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "db:push": "turbo run db:push",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
+    "db:studio": "turbo run db:studio",
+    "db:seed": "cd packages/db && bun src/seed.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.0.6",
+    "turbo": "^2.5.4",
+    "typescript": "^5",
+    "ultracite": "^5.0.32"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

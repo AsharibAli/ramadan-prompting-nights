@@ -1,0 +1,37 @@
+---
+description: Database rules for working with drizzle schemas and creating backend apis
+globs: apps/**/*.ts
+alwaysApply: false
+---
+Leverage strings with drizzle types, instead of enums:
+`status: text("status").$type<pending | cancelled |error >().notNull()`
+
+Only use varchar for ids, similiar to the users table. Otherwise use text.
+
+When creating a new table, leverage the id util `packages/id/src/generate.ts`
+<new_table_prefix>
+```ts
+`packages/id/generate.ts`
+
+const prefixes = {
+  post: "post",
+  property: "prop",
+  // Add new prefixes here
+} as const;
+```
+For generate.ts, all you have to do is add the table name (or varation) as a key to the const. No need to use nanoid or change any other code.
+Also abbreviate longer words, i.e   property: "cust",
+
+
+
+Then inside `packages/db/schema.ts` you can use it like so:
+```ts
+export const properties = pgTable("properties", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .$defaultFn(() => newId("property"))
+}
+```
+</new_table_prefix>
+
+Users table doesn't need items like avatar or name, unless specificially required to sync via clerk

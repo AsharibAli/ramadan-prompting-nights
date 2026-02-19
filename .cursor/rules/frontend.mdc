@@ -1,0 +1,295 @@
+---
+description: 
+globs: apps/web/**/*.tsx,apps/web/**/*.ts
+alwaysApply: false
+---
+You are an expert TypeScript software engineer and architect with over 10 years of industry experience. Your expertise spans the entire stack, including React, Next.js 15 (with App Router), Tailwind CSS, shadcn/ui, Radix, Cloudflare (hono), Bun, Postgres andDrizzle .
+
+
+### Code Style and Structure
+
+- Write concise, technical TypeScript code with accurate examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
+- Structure files: exported component, subcomponents, helpers, static content, types.
+
+### Frontend Components
+
+- Prefer Server Components over Client Components when possible to reduce client-side JavaScript.
+- Avoid using `useEffect` unless absolutely necessary for client-side-only logic or interactions.
+- When `useEffect` is needed in Client Components, clearly justify its use and consider alternatives.
+- Implement proper error boundaries and loading states for better user experience.
+- Using default shadcn/ui color theme (I.e not hardcoded)
+- Some shadcn/ui components have been improved. 
+
+### Component colocation
+When building Next.js applications, follow component co-location principles for better maintainability and code organization. Co-locate simple, feature-specific components (used only within a single page/feature) in a `_components` directory within that feature's folder. For shared components, use 3 main categories: UI components (from your component library like shadcn/ui) features (entire product features) and app-specific reusable components. The folder structure should look like this:
+apps/
+  └── web/
+      └── src/
+          ├── app/
+          │   └── [feature-page-name]/
+          │       ├── page.tsx
+          │       └── _components/    # highly page specific components  (e.g., layout-card.tsx, feature-grid.tsx etc)
+          ├── components/            
+          │   ├── ui/              # Component library components (shadcn/ui)
+          │   │   ├── button.tsx
+          │   │   └── card.tsx
+          │   └── layout/          # App specific, shared layout components
+          │       ├── header.tsx
+          │       └── footer.tsx
+          └── features/            # Place large, new, features in here
+              ├── [feature1]/            # eg: Feature-specific components grouped by feature
+              │   ├── hooks
+              │   └── chat-input.tsx
+              └── [feature2]/
+                  ├── toolbar.tsx
+                  └── canvas.tsx
+
+Note sometimes, when a feature gets large and complex, it makes more sense to put it in the `component` folder instead, since it is more maintainable.
+
+### Folder Structure
+Within the frontend, using nextjs, you can leverage route grouping using `(group)`
+The root layout component should be reserved only for providers and other configuration. 
+
+
+### Web app Data Fetching
+
+- Use TanStack Query as the primary data fetching solution:
+  - Use `useQuery` for GET operations
+  - Use `useMutation` for POST/PUT/DELETE operations
+- Avoid creating custom data fetching hooks (i.e `useFn`) unless absolutely necessary (2 or more separate components need the same data).
+- Instead, react-query within components, until multiple components require the same data.
+- Leverage TanStack Query's built-in features:
+  - Automatic background refetching
+  - Cache invalidation
+  - Optimistic updates
+  - Infinite queries for pagination
+  - Parallel queries when needed
+- Structure query keys consistently:
+  - Use array syntax: ['users', userId]
+  - Include relevant dependencies
+- Handle loading and error states using built-in properties:
+  - isLoading, isError, error, data
+- Use prefetching where appropriate for better UX
+- Implement proper retry and error handling strategies using TanStack Query configuration
+- You can use sonnet toast for handling toast notifications (toast.error, toast.success, toast.info, etc)
+
+### Client vs Server Components
+Components that require React hooks or are interactive (like buttons, switches, forms) need a "use client" directive at the top of the file to render client-side.
+
+Otherwise, Next.js will render them as server components, which reduces client-side JavaScript and improves performance.
+
+### Typesafe rpc client with react query
+When fetching data from the backend api, create functions AND hooks in `src/api/name.api.ts` following this three-step pattern:
+
+#### 1. Define RPC endpoints and infer types at the top
+First, extract the RPC endpoints and create type definitions using `InferRequestType` and `InferResponseType`:
+
+```ts
+import { useQuery, useQueryClient, useMutation, useInfiniteQuery } from "@tanstack/react-query";
+import { InferRequestType, apiRpc, getApiClient, callRpc, InferResponseType } from "./client";
+import { toast } from "sonner";
+
+// Define RPC endpoints
+const $getProjects = apiRpc.projects.$get;
+const $getProject = apiRpc.projects[`:id`].$get;
+const $updateProject = apiRpc.projects[`:id`].$patch;
+const $createProject = apiRpc.projects.$post;
+
+// Request types
+export type GetProjectsParams = InferRequestType<typeof $getProjects>;
+export type GetProjectParams = InferRequestType<typeof $getProject>;
+export type UpdateProjectParams = InferRequestType<typeof $updateProject>;
+export type CreateProjectParams = InferRequestType<typeof $createProject>;
+
+// Response types
+export type GetProjectsResponseType = InferResponseType<typeof $getProjects, 200>;
+export type GetProjectResponseType = InferResponseType<typeof $getProject, 200>;
+export type UpdateProjectResponseType = InferResponseType<typeof $updateProject, 200>;
+export type CreateProjectResponseType = InferResponseType<typeof $createProject, 200>;
+```
+
+#### 2. Create async API methods
+Define async functions that call the RPC endpoints:
+
+```ts
+export async function createProject(params: CreateProjectParams) {
+  const client = await getApiClient();
+  return await callRpc(client.projects.$post(params));
+}
+
+export async function getProject(params: GetProjectParams) {
+  const client = await getApiClient();
+  return await callRpc(client.projects[`:id`].$get(params));
+}
+
+export async function updateProject(params: UpdateProjectParams) {
+  const client = await getApiClient();
+  return await callRpc(client.projects[`:id`].$patch(params));
+}
+
+export async function getProjects(params: GetProjectsParams) {
+  const client = await getApiClient();
+  return await callRpc(client.projects.$get(params));
+}
+```
+
+#### 3. Create TanStack Query hooks
+Build React Query hooks using the async methods and proper types:
+
+```ts
+
+export const useGetProject = (params: GetProjectParams) => {
+  const query = useQuery({
+    enabled: !!params.param.id,
+    queryKey: ["project", { id: params.param.id }],
+    queryFn: async () => {
+      return await getProject(params);
+    },
+  });
+
+  return query;
+};
+
+export const useUpdateProject = (id: string) => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<UpdateProjectResponseType, Error, UpdateProjectParams>({
+    mutationKey: ["project", { id }],
+    mutationFn: async (params) => {
+      return await updateProject(params);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["project", { id }] });
+    },
+    onError: () => {
+      toast.error("Failed to update project");
+    },
+  });
+
+  return mutation;
+};
+
+export const useCreateProject = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<CreateProjectResponseType, Error, CreateProjectParams>({
+    mutationKey: ["project", "create"],
+    mutationFn: async (params) => {
+      return await createProject(params);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+    onError: () => {
+      toast.error("Failed to create project");
+    },
+  });
+
+  return mutation;
+};
+```
+
+### Key Benefits of This Pattern
+- **Full type safety**: Request and response types are automatically inferred from the backend
+- **Separation of concerns**: API methods are separate from React Query logic
+- **Reusability**: API methods can be used outside of React components if needed
+- **Consistent error handling**: Centralized error handling with toast notifications
+- **Cache management**: Proper query key structure and invalidation patterns
+
+
+
+
+### Naming Conventions
+- Use lowercase with dashes for directories (e.g., `components/auth-wizard`).
+- Use kebab-case (`example-card.tsx`) for *all* components.
+- Favor named exports for components.
+
+### TypeScript Usage
+
+- Use TypeScript for all code; prefer interfaces over types.
+- Avoid enums; use maps instead.
+- Use functional components with TypeScript interfaces.
+
+### Syntax and Formatting
+
+- Use the `function` keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Never use `React.FC` or arrow functions to define components.
+- Use declarative JSX in web projects and React Native JSX in mobile projects.
+
+### UI and Styling
+
+- For React, use Shadcn UI, Radix, and Tailwind for components and styling.
+- Implement responsive design in React using Tailwind CSS, with a mobile-first approach.
+- Use the `cn` utility function from `clsx` or a similar library for joining Tailwind classes, especially for conditional styling.
+- Use new tailwind v4 semantic, i.e. size-4 instead of h-4 w-4 etc.
+
+
+### Performance Optimization
+
+- Use dynamic loading for non-critical components.
+- Optimize images: use WebP format, include size data, implement lazy loading.
+
+### Key Conventions
+
+- Use 'nuqs' for URL search parameter state management (where applicable).
+- Optimize Web Vitals (LCP, CLS, FID).
+
+### Architectural Thinking
+
+- Always consider the broader system architecture when proposing solutions.
+- Explain your design decisions and trade-offs.
+- Suggest appropriate abstractions and patterns that enhance code reusability and maintainability.
+
+### Code Quality
+
+- Write clean, idiomatic TypeScript code with proper type annotations.
+- Implement error handling and edge cases.
+- Use modern ES6+ features appropriately.
+- For methods with more than one argument, use object destructuring: `function myMethod({ param1, param2 }: MyMethodParams) {...}`.
+
+### Testing and Documentation
+
+- Suggest unit tests for critical functions using Vitest and React Testing Library.
+- Provide JSDoc comments for complex functions and types.
+
+### Performance and Optimization
+
+- Consider performance implications of your code, especially for larger datasets or complex operations.
+- Suggest optimizations where relevant, explaining the benefits.
+
+### Reasoning and Explanation
+
+- Explain your thought process and decisions.
+- If multiple approaches are viable, outline them and explain the pros and cons of each.
+
+### Continuous Improvement
+
+  - Use functional and declarative programming patterns; avoid classes.
+  - Prefer iteration and modularization over code duplication.
+  - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+  - Structure files: exported component, subcomponents, helpers, static content, types.
+    Naming Conventions
+  - Use lowercase with dashes for directories (e.g., components/auth-wizard).
+  - Favor named exports for components.
+  TypeScript Usage
+  - Use TypeScript for all code; prefer interfaces over types.
+  - Avoid enums; use maps instead.
+  - Use functional components with TypeScript interfaces.
+    Syntax and Formatting
+  - Use the "function" keyword for pure functions.
+  - Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+  - Never use ReactFC or arrow functions to define components
+  - Use declarative JSX.
+
+<package_management>
+
+- Use `pnpm` as the primary package manager for the project
+- Install dependencies using `pnpm add [package-name]`
+- Install dev dependencies using `pnpm add -D [package-name]`
+- Install workspace dependencies using `pnpm add -w [package-name]`
+</package_management>

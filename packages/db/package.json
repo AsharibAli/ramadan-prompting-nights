@@ -1,0 +1,36 @@
+{
+  "name": "@repo/db",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./utils/tokens": "./src/utils/tokens.ts"
+  },
+  "keywords": [],
+  "scripts": {
+    "db:push": "dotenv -e .env drizzle-kit push",
+    "db:studio": "dotenv -e .env drizzle-kit studio",
+    "db:generate": "dotenv -e .env drizzle-kit generate",
+    "db:migrate": "dotenv -e .env drizzle-kit migrate",
+    "db:seed": "bun run src/seed.ts",
+    "format": "biome format --write ."
+  },
+  "devDependencies": {
+    "@repo/id": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.17.0",
+    "@types/pg": "^8.15.5",
+    "dotenv": "^16.6.1",
+    "dotenv-cli": "^8.0.0",
+    "drizzle-kit": "0.31.4",
+    "postgres": "^3.4.7",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.4",
+    "drizzle-zod": "^0.8.2",
+    "zod": "^4.0.15"
+  }
+}

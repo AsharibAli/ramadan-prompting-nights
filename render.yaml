@@ -1,0 +1,27 @@
+# Render config for the ramadam-prompting-nights project
+services:
+  - type: web
+    name: ramadam-prompting-nights
+    repo: https://github.com/asharibali/ramadam-prompting-nights
+    plan: free
+    envVars:
+      - key: BUN_VERSION
+        value: "1.2.3"
+        sync: false
+      - key: CLERK_SIGNING_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: "3004"
+        sync: false
+    region: oregon
+    buildCommand: pnpm install --frozen-lockfile
+    startCommand: pnpm start
+    healthCheckPath: /health
+    rootDir: apps/api
+version: "1"

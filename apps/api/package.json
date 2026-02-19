@@ -1,0 +1,31 @@
+{
+  "name": "api",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "format": "biome format --write .",
+    "typecheck": "tsc --noEmit",
+    "clerk:listen": "pnpm dlx ngrok http 3004"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.1",
+    "@ai-sdk/google": "^2.0.2",
+    "@ai-sdk/openai": "^2.0.5",
+    "@clerk/backend": "^2.6.2",
+    "@hono/zod-validator": "^0.7.2",
+    "@repo/db": "workspace:*",
+    "@repo/id": "workspace:*",
+    "@repo/logs": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "ai": "^5.0.8",
+    "dotenv": "^16.6.1",
+    "hono": "^4.8.12",
+    "svix": "^1.70.0",
+    "vitest": "^3.2.4",
+    "zod": "^4.0.15"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
