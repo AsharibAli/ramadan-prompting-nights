@@ -12,6 +12,12 @@ import { ramadanRoutes } from "@/modules/ramadan/ramadan.routes";
 import { webhookRoutes } from "@/modules/webhooks/webhook.routes";
 
 const app = new Hono();
+const fallbackOrigins = ["http://localhost:3000", "https://ramadan-prompting-nights.vercel.app"];
+const configuredOrigins = (process.env.CORS_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : fallbackOrigins;
 app.onError((err, c) => {
   appLogger.error(
     {
@@ -56,7 +62,7 @@ app.onError((err, c) => {
 app.use(
   "*",
   cors({
-    origin: ["http://localhost:3000", "https://ramadan-prompting-nights.vercel.app"],
+    origin: allowedOrigins,
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Length"],
