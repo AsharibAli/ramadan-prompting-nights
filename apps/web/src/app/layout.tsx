@@ -9,6 +9,7 @@ import { Providers } from "@/providers/providers";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import "./globals.css";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Ramadan Prompting Nights",
@@ -45,7 +46,21 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <ClerkProvider>
       <html suppressHydrationWarning lang="en">
-        <head>{/* <GoogleAnalytics gaId="G-2L23D2FV55" /> */}</head>
+        <head>
+                {/* Google Analytics - for tracking website traffic */}
+      <Script
+        strategy="afterInteractive"
+        src="https://www.googletagmanager.com/gtag/js?id=G-15R782D1Z4"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', 'G-15R782D1Z4');
+        `}
+      </Script>
+        </head>
 
         <body
           className={cn(
