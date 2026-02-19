@@ -7,10 +7,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-      <MainHeader />
+    <>
+      <section className="sticky top-0 z-50 w-full border-y border-[var(--border)] bg-gradient-to-r from-[#231f4a] via-[#0f2b4a] to-[#0f3f45] px-4 py-2 text-center text-sm text-[var(--text-primary)] backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2">
+          <span>How to participate in this Challenge (step-by-step)?</span>
+          <a
+            className="inline-flex items-center gap-1 font-semibold text-[var(--accent-gold)] underline-offset-4 hover:underline"
+            href="https://youtu.be/BybNZEAgh9Y"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Watch the Video
+            <ArrowRight className="size-3.5" />
+          </a>
+        </div>
+      </section>
 
-      <section className="animate-fade-up space-y-8 text-center">
+      <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+        <MainHeader />
+
+        <section className="animate-fade-up space-y-8 text-center">
         <div className="inline-flex rounded-full bg-[var(--accent-gold-dim)] p-4">
           <MoonStar className="size-10 text-[var(--accent-gold)]" />
         </div>
@@ -51,9 +67,9 @@ export default function Home() {
             </Button>
           </a>
         </div>
-      </section>
+        </section>
 
-      <section className="mt-14 grid gap-4 md:grid-cols-3">
+        <section className="mt-14 grid gap-4 md:grid-cols-3">
         {[
           ["Write a Structured Prompt", "Use Goal, Constraints, Edge Cases, and Output Format."],
           ["Run Tests", "Validate generated code against challenge test cases."],
@@ -66,14 +82,14 @@ export default function Home() {
             <CardContent className="text-[var(--text-secondary)]">{description}</CardContent>
           </Card>
         ))}
-      </section>
+        </section>
 
-      <section className="mt-6">
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="font-display">Scoring Example</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
+        <section className="mt-6">
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="font-display">Scoring Example</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-[var(--border)] bg-black/20 p-3">
               <p className="text-sm text-[var(--text-secondary)]">Prompt Quality (85/100)</p>
               <pre className="mt-2 font-mono text-sm whitespace-pre-wrap">
@@ -107,13 +123,13 @@ export default function Home() {
 <strong>Efficiency points = 80% of 20 = <span className="text-[var(--accent-gold)]">16</span></strong> <br />
               </pre>
             </div>
-            <p className="font-semibold text-[var(--accent-gold)] md:col-span-3">
-              Final Weighted Score: 87 / 100 (higher is better)
-            </p>
-          </CardContent>
-        </Card>
-      </section>
-
-    </div>
+              <p className="font-semibold text-[var(--accent-gold)] md:col-span-3">
+                Final Weighted Score: 87 / 100 (higher is better)
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </>
   );
 }
