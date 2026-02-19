@@ -3,6 +3,7 @@
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { MainHeader } from "@/components/layout/main-header";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetLeaderboard } from "@/api/ramadan.api";
