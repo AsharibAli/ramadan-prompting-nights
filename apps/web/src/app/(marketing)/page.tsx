@@ -25,14 +25,14 @@ export default function Home() {
           <SignedOut>
             <Link href="/sign-in">
               <Button className="gold-button">
-                Join the Challenge <ArrowRight className="ml-2 size-4" />
+                Join the Challenge <ArrowRight className="ml-1 size-4" />
               </Button>
             </Link>
           </SignedOut>
           <SignedIn>
             <Link href="/dashboard">
               <Button className="gold-button">
-                Start the Challenge <ArrowRight className="ml-2 size-4" />
+                Start the Challenge <ArrowRight className="ml-1 size-4" />
               </Button>
             </Link>
           </SignedIn>
@@ -46,7 +46,7 @@ export default function Home() {
               size="lg"
               variant="outline"
             >
-              <Star className="mr-2 size-4 text-[var(--accent-gold)]" />
+              <Star className="mr-1 size-4 text-[var(--accent-gold)]" />
               Star the Repository
             </Button>
           </a>
