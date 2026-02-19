@@ -60,12 +60,20 @@ function isChallengeUnlocked(unlocksAt: Date) {
   return unlocksAt <= new Date();
 }
 
+/**
+ * Calculates efficiency penalty based on total token count (prompt + code).
+ * Lower tokens = better efficiency = lower penalty.
+ * Optimal submissions (≤90 tokens) receive no penalty, enabling 100/100 score.
+ *
+ * @param totalTokens - Combined prompt and code token count
+ * @returns Penalty value (0-28) subtracted from efficiency score
+ */
 function getEfficiencyPenalty(totalTokens: number) {
-  if (totalTokens <= 90) return 6;
-  if (totalTokens <= 140) return 10;
-  if (totalTokens <= 220) return 16;
-  if (totalTokens <= 320) return 24;
-  return 32;
+  if (totalTokens <= 90) return 0;
+  if (totalTokens <= 140) return 6;
+  if (totalTokens <= 220) return 12;
+  if (totalTokens <= 320) return 20;
+  return 28;
 }
 
 function computeWeightedScore({
