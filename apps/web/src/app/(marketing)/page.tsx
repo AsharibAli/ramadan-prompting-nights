@@ -1,5 +1,5 @@
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { ArrowRight, MoonStar } from "lucide-react";
+import { ArrowRight, Code2, MoonStar } from "lucide-react";
 import Link from "next/link";
 import { MainHeader } from "@/components/layout/main-header";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,12 @@ export default function Home() {
             rel="noopener noreferrer"
             target="_blank"
           >
-            <Button size="lg" variant="outline">
+            <Button
+              className="border-[var(--border)] bg-white/5 text-[var(--text-primary)] hover:border-[var(--accent-gold)] hover:bg-[var(--accent-gold-dim)]"
+              size="lg"
+              variant="outline"
+            >
+              <Code2 className="mr-2 size-4" />
               See Codebase
             </Button>
           </a>
