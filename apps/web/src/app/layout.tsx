@@ -13,7 +13,7 @@ import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Ramadan Prompting Nights",
-  description: "30 nights. 30 challenges. Fewest tokens wins.",
+  description: "Scenario-based prompting competition. 30 nights. 30 real-world coding scenarios.",
 };
 
 const playfair = Playfair_Display({
