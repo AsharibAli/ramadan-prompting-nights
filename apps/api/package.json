@@ -1,6 +1,7 @@
 {
   "name": "api",
   "type": "module",
+  "packageManager": "pnpm@9.15.6",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "start": "bun run src/index.ts",
