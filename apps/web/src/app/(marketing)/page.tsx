@@ -21,7 +21,7 @@ export default function Home() {
           Scenario-based prompting competition. 30 nights. 30 real-world coding scenarios.
         </p>
         <p className="text-sm text-[var(--text-muted)]">by Sir Asharib Ali · for GIAIC Students</p>
-        <div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <SignedOut>
             <Link href="/sign-in">
               <Button className="gold-button">
@@ -36,6 +36,15 @@ export default function Home() {
               </Button>
             </Link>
           </SignedIn>
+          <a
+            href="https://github.com/AsharibAli/ramadan-prompting-nights"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <Button size="lg" variant="outline">
+              See Codebase
+            </Button>
+          </a>
         </div>
       </section>
 
