@@ -1,5 +1,5 @@
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { ArrowRight, Code2, MoonStar } from "lucide-react";
+import { ArrowRight, MoonStar, Star } from "lucide-react";
 import Link from "next/link";
 import { MainHeader } from "@/components/layout/main-header";
 import { Button } from "@/components/ui/button";
@@ -46,8 +46,8 @@ export default function Home() {
               size="lg"
               variant="outline"
             >
-              <Code2 className="mr-2 size-4" />
-              See Codebase
+              <Star className="mr-2 size-4 text-[var(--accent-gold)]" />
+              Star the Repository
             </Button>
           </a>
         </div>
