@@ -180,6 +180,15 @@ export default function ChallengeSolverPage() {
 
   return (
     <div className="space-y-4 pb-10">
+      
+      <Link
+        href="/dashboard"
+        className="flex items-center gap-0.5 group transition-colors"
+      >
+        <ArrowLeft className="mr-0.5 size-4 transition-transform group-hover:-translate-x-1" />
+        Back to Dashboard
+      </Link>
+
       <Card className="glass-card animate-fade-up">
         <CardHeader>
           <div className="flex flex-wrap items-center gap-2">

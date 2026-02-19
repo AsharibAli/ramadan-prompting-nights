@@ -81,12 +81,6 @@ export default function LeaderboardPage() {
           )}
         </CardContent>
       </Card>
-
-      <div className="text-center text-sm text-[var(--text-secondary)]">
-        <Link className="hover:text-[var(--accent-gold)]" href="/">
-          Back to landing
-        </Link>
-      </div>
     </div>
   );
 }

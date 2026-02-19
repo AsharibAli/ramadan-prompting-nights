@@ -47,7 +47,7 @@ export default function Home() {
               variant="outline"
             >
               <Star className="mr-1 size-4 text-[var(--accent-gold)]" />
-              Star the Repository
+              Star Repository
             </Button>
           </a>
         </div>
@@ -114,12 +114,6 @@ export default function Home() {
         </Card>
       </section>
 
-      <footer className="mt-10 pb-8 text-center text-[var(--text-muted)] text-sm">
-        Build with 🤍 by {" "}
-        <a href="https://github.com/asharibali" target="_blank" rel="noopener noreferrer">
-            <strong>Asharib Ali</strong>
-          </a>
-      </footer>
     </div>
   );
 }

@@ -31,6 +31,7 @@ function SidebarContent({ challenges, submissions, onToggle }: SidebarContentPro
       <div className="mb-4 flex items-center justify-between gap-2 px-2">
         <Link className="flex items-center gap-2" href="/" title="Go to home" aria-label="Go to home">
           <MoonStar className="size-4 shrink-0 text-[var(--accent-gold)]" />
+          <span className="font-semibold text-[var(--text-primary)] text-sm tracking-wide">RPN</span>
         </Link>
         {onToggle ? (
           <Button
@@ -115,7 +116,7 @@ export function DashboardSidebar({ challenges, submissions }: DashboardSidebarPr
       <aside
         className={cn(
           "hidden h-screen shrink-0 overflow-hidden transition-all duration-200 md:block",
-          isDesktopOpen ? "w-[280px]" : "w-0"
+          isDesktopOpen ? "w-[320px]" : "w-0"
         )}
       >
         <SidebarContent

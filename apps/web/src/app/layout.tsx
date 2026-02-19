@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Outfit, Playfair_Display } from "next/font/google";
+import { MainFooter } from "@/components/layout/main-footer";
 import { Starfield } from "@/components/ramadan/starfield";
 import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { Toaster } from "@/components/ui/sonner";
@@ -72,7 +73,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
         >
           <Starfield />
           <Providers attribute="class" defaultTheme="system" enableSystem>
-            {children}
+            <div className="flex min-h-screen flex-col">
+              <main className="flex-1">{children}</main>
+              <MainFooter />
+            </div>
             <TailwindIndicator />
             <Toaster />
           </Providers>
