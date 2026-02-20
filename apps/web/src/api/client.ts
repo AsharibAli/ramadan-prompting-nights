@@ -15,38 +15,51 @@ export const apiRpc = hc<AppType>(getBaseUrl(), {
   },
 }).api;
 
+// Singleton authenticated client — avoid re-creating hc() on every call
+let _apiClient: ReturnType<typeof hc<AppType>>["api"] | null = null;
+
 export const getApiClient = () => {
-  return hc<AppType>(getBaseUrl(), {
-    fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-      const headers = new Headers(init?.headers);
-      const authToken = await getToken();
+  if (!_apiClient) {
+    _apiClient = hc<AppType>(getBaseUrl(), {
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const headers = new Headers(init?.headers);
+        const authToken = await getToken();
 
-      headers.set("Authorization", `Bearer ${authToken}`);
+        headers.set("Authorization", `Bearer ${authToken}`);
 
-      const response = await fetch(input, {
-        ...init,
-        headers,
-        cache: "no-store",
-      });
+        // Removed cache: "no-store" — let React Query handle caching via staleTime.
+        // no-store forces the browser to skip the HTTP cache entirely, which is wasteful
+        // when React Query already manages freshness.
+        const response = await fetch(input, {
+          ...init,
+          headers,
+        });
 
-      return response;
-    },
-  }).api;
+        return response;
+      },
+    }).api;
+  }
+  return _apiClient;
 };
 
-export const getServerClient = () => {
-  return hc<AppType>(getBaseUrl(), {
-    fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-      const headers = new Headers(init?.headers);
-      const response = await fetch(input, {
-        ...init,
-        headers,
-        cache: "no-store",
-      });
+// Singleton server client
+let _serverClient: ReturnType<typeof hc<AppType>>["api"] | null = null;
 
-      return response;
-    },
-  }).api;
+export const getServerClient = () => {
+  if (!_serverClient) {
+    _serverClient = hc<AppType>(getBaseUrl(), {
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const headers = new Headers(init?.headers);
+        const response = await fetch(input, {
+          ...init,
+          headers,
+        });
+
+        return response;
+      },
+    }).api;
+  }
+  return _serverClient;
 };
 
 export const callRpc = async <T>(rpc: Promise<ClientResponse<T>>): Promise<T> => {
