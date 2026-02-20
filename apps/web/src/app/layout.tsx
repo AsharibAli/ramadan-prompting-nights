@@ -20,16 +20,22 @@ export const metadata: Metadata = {
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
+  display: "swap",
+  weight: ["400", "700"],
 });
 
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
+  display: "swap",
+  weight: ["400", "700"],
 });
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -47,22 +53,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <ClerkProvider>
       <html suppressHydrationWarning lang="en">
-        <head>
-                {/* Google Analytics - for tracking website traffic */}
-      <Script
-        strategy="afterInteractive"
-        src="https://www.googletagmanager.com/gtag/js?id=G-15R782D1Z4"
-      />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-                    gtag('config', 'G-15R782D1Z4');
-        `}
-      </Script>
-        </head>
-
         <body
           className={cn(
             "min-h-screen bg-background font-sans antialiased",
@@ -81,6 +71,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <Toaster />
           </Providers>
           <VercelAnalytics />
+          <Script
+            strategy="afterInteractive"
+            src="https://www.googletagmanager.com/gtag/js?id=G-15R782D1Z4"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-15R782D1Z4');`}
+          </Script>
         </body>
       </html>
     </ClerkProvider>
