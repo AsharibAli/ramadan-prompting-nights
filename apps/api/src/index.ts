@@ -74,7 +74,11 @@ app.use(
 const PORT = process.env.PORT || 3004;
 
 app.use("*", logger());
-app.use("*", prettyJSON());
+
+// Only enable prettyJSON in development (saves CPU in production)
+if (process.env.NODE_ENV !== "production") {
+  app.use("*", prettyJSON());
+}
 
 app.get("/health", (c) => {
   return c.text("OK");
