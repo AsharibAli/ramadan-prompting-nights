@@ -41,7 +41,7 @@ export function useChatDraft(chatId: string | null) {
   );
 
   // Debounce localStorage writes to avoid thrashing on every keystroke
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const DEBOUNCE_MS = 300;
 
   const updateInput = useCallback(
