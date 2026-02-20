@@ -1,6 +1,6 @@
 "use client";
 import type { FileUIPart } from "ai";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 export interface DraftData {
@@ -40,26 +40,33 @@ export function useChatDraft(chatId: string | null) {
     [draftKey, draftsStore.drafts]
   );
 
+  // Debounce localStorage writes to avoid thrashing on every keystroke
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const DEBOUNCE_MS = 300;
+
   const updateInput = useCallback(
     (input: string) => {
-      setDraftsStore((currentStore) => {
-        const currentDraft = currentStore.drafts[draftKey] || {
-          message: "",
-          attachments: [],
-          updatedAt: Date.now(),
-        };
-        return {
-          ...currentStore,
-          drafts: {
-            ...currentStore.drafts,
-            [draftKey]: {
-              ...currentDraft,
-              message: input,
-              updatedAt: Date.now(),
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = setTimeout(() => {
+        setDraftsStore((currentStore) => {
+          const currentDraft = currentStore.drafts[draftKey] || {
+            message: "",
+            attachments: [],
+            updatedAt: Date.now(),
+          };
+          return {
+            ...currentStore,
+            drafts: {
+              ...currentStore.drafts,
+              [draftKey]: {
+                ...currentDraft,
+                message: input,
+                updatedAt: Date.now(),
+              },
             },
-          },
-        };
-      });
+          };
+        });
+      }, DEBOUNCE_MS);
     },
     [draftKey, setDraftsStore]
   );
