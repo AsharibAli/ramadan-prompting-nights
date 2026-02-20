@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   apiRpc,
   callRpc,
@@ -128,7 +129,9 @@ export const useCreateChat = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
-    onError: () => {},
+    onError: (error) => {
+      toast.error(error.message || "Failed to create chat");
+    },
   });
   return mutation;
 };
@@ -145,7 +148,9 @@ export const useUpdateChat = (id: string) => {
       queryClient.invalidateQueries({ queryKey: ["chats"] });
       queryClient.invalidateQueries({ queryKey: ["chat", { id }] });
     },
-    onError: () => {},
+    onError: (error) => {
+      toast.error(error.message || "Failed to update chat");
+    },
   });
   return mutation;
 };
@@ -171,6 +176,9 @@ export const useGetChatMessages = (params: GetChatMessagesParams & { disable?: b
     queryKey: ["chat-messages", { chatId: params.param.id }],
     refetchOnWindowFocus: false,
     retry: false,
+    // Messages only change when the user sends one (which triggers invalidation).
+    // Infinity prevents wasteful background refetches during the same session.
+    staleTime: Number.POSITIVE_INFINITY,
     queryFn: async () => {
       return await getChatMessages(params);
     },
@@ -189,8 +197,8 @@ export const useCreateChatMessage = (chatId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat-messages", { chatId }] });
     },
-    onError: () => {
-      // toast.error("Failed to send message");
+    onError: (error) => {
+      toast.error(error.message || "Failed to send message");
     },
   });
   return mutation;
@@ -219,8 +227,8 @@ export const useUpdateChatMessage = (chatId: string, messageId: string) => {
       queryClient.invalidateQueries({ queryKey: ["chat-messages", { chatId }] });
       queryClient.invalidateQueries({ queryKey: ["chat-message", { chatId, messageId }] });
     },
-    onError: () => {
-      // toast.error("Failed to update message");
+    onError: (error) => {
+      toast.error(error.message || "Failed to update message");
     },
   });
   return mutation;
