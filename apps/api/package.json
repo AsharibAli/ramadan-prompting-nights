@@ -21,6 +21,7 @@
     "@repo/typescript-config": "workspace:*",
     "ai": "^5.0.8",
     "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.44.4",
     "hono": "^4.8.12",
     "svix": "^1.70.0",
     "vitest": "^3.2.4",
