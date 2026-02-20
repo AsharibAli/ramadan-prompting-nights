@@ -4,6 +4,7 @@ import {
   Children,
   cloneElement,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -40,14 +41,18 @@ function FileUpload({
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
 
-  const handleFiles = (files: FileList) => {
-    const newFiles = Array.from(files);
-    if (multiple) {
-      onFilesAdded(newFiles);
-    } else {
-      onFilesAdded(newFiles.slice(0, 1));
-    }
-  };
+  // Stabilize handleFiles with useCallback to prevent re-attaching event listeners on every render
+  const handleFiles = useCallback(
+    (files: FileList) => {
+      const newFiles = Array.from(files);
+      if (multiple) {
+        onFilesAdded(newFiles);
+      } else {
+        onFilesAdded(newFiles.slice(0, 1));
+      }
+    },
+    [onFilesAdded, multiple]
+  );
 
   useEffect(() => {
     const handleDrag = (e: DragEvent) => {
@@ -87,7 +92,7 @@ function FileUpload({
       window.removeEventListener("dragover", handleDrag);
       window.removeEventListener("drop", handleDrop);
     };
-  }, [handleFiles, onFilesAdded, multiple]);
+  }, [handleFiles]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
