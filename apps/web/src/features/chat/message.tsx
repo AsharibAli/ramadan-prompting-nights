@@ -30,7 +30,7 @@ function MessageComponent({
   status,
 }: MessageProps) {
   const [copied, setCopied] = useState(false);
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const copyToClipboard = useCallback(() => {
     navigator.clipboard.writeText(
