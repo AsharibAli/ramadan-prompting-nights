@@ -12,12 +12,13 @@ import { getCountdownParts, toPktLabel } from "@/lib/ramadan-time";
 export default function DashboardHomePage() {
   const { data: challenges = [] } = useGetChallenges();
   const { data: submissions = [] } = useGetMySubmissions();
-  const { data: leaderboard = [] } = useGetLeaderboard();
+  const { data: leaderboardData } = useGetLeaderboard();
   const { user } = useUser();
 
   const completed = submissions.length;
   const totalScore = submissions.reduce((sum, item) => sum + item.weightedScore, 0);
-  const me = leaderboard.find((item) => item.userId === user?.id);
+  const leaderboardEntries = leaderboardData?.pages.flatMap((page) => page.entries) ?? [];
+  const me = leaderboardEntries.find((item) => item.userId === user?.id);
   const displayName = user?.fullName || user?.firstName || "Student";
 
   const nextChallenge = useMemo(() => {
