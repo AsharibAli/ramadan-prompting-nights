@@ -17,7 +17,6 @@ declare module "hono" {
 
 export const getAuth = (c: Context) => {
   const clerkAuth = c.get("clerkAuth");
-
   return clerkAuth;
 };
 
@@ -35,6 +34,27 @@ type ClerkEnv = {
   CLERK_API_URL: string;
   CLERK_API_VERSION: string;
 };
+
+/**
+ * Singleton Clerk client — created once at module load, reused across all requests.
+ * Preserves JWKS key caching and avoids unnecessary object allocation per request.
+ */
+let _clerkClient: ClerkClient | null = null;
+
+function getOrCreateClerkClient(
+  secretKey: string,
+  publishableKey: string,
+  options?: Record<string, unknown>
+): ClerkClient {
+  if (!_clerkClient) {
+    _clerkClient = createClerkClient({
+      ...options,
+      secretKey,
+      publishableKey,
+    });
+  }
+  return _clerkClient;
+}
 
 export const auth = (options?: ClerkOptions): MiddlewareHandler => {
   return async (c, next) => {
@@ -60,13 +80,7 @@ export const auth = (options?: ClerkOptions): MiddlewareHandler => {
       throw new Error("Missing Clerk Publishable key");
     }
 
-    const clerkClient = createClerkClient({
-      ...rest,
-      apiUrl,
-      apiVersion,
-      secretKey,
-      publishableKey,
-    });
+    const clerkClient = getOrCreateClerkClient(secretKey, publishableKey, { apiUrl, apiVersion, ...rest });
 
     const requestState = await clerkClient.authenticateRequest(c.req.raw, {
       ...rest,
