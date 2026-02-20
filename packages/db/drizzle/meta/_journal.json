@@ -8,6 +8,13 @@
       "when": 1771444875444,
       "tag": "0000_broken_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771597433960,
+      "tag": "0002_nostalgic_songbird",
+      "breakpoints": true
     }
   ]
 }

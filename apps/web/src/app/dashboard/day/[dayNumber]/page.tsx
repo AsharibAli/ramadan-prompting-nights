@@ -81,6 +81,13 @@ export default function ChallengeSolverPage() {
     ? mySubmissions.find((item) => item.challengeId === selectedChallengeMeta.id)
     : undefined;
 
+  const MAX_ATTEMPTS = 3;
+  const currentAttemptCount = bestForCurrent?.attemptCount ?? 0;
+  const nextAttemptNumber = Math.min(currentAttemptCount + 1, MAX_ATTEMPTS);
+  const attemptsExhausted = currentAttemptCount >= MAX_ATTEMPTS;
+  const MULTIPLIER_LABELS: Record<number, string> = { 1: "100%", 2: "90%", 3: "75%" };
+  const nextMultiplierLabel = MULTIPLIER_LABELS[nextAttemptNumber] ?? "75%";
+
   const totalTokens = promptTokens + codeTokens;
   const allPassed = results.length > 0 && results.every((item) => item.passed);
 
@@ -137,10 +144,11 @@ export default function ChallengeSolverPage() {
     };
 
     const response = await submissionMutation.mutateAsync(payload);
+    const multiplierPct = Math.round(response.multiplier * 100);
     if (response.isNewBest) {
-      toast.success(`🎉 New best! ${response.weightedScore} points`);
+      toast.success(`🎉 New best! ${response.weightedScore} pts (Attempt ${response.attemptNumber}/3 · ${multiplierPct}% multiplier)`);
     } else {
-      toast.success(`Submitted! ${response.weightedScore} points`);
+      toast.success(`Submitted! ${response.weightedScore} pts (Attempt ${response.attemptNumber}/3 · ${multiplierPct}% multiplier)`);
     }
   };
 
@@ -282,18 +290,31 @@ export default function ChallengeSolverPage() {
 
             <Separator className="bg-[var(--border)]" />
             {allPassed ? (
-              <Button
-                className="gold-button w-full"
-                disabled={submissionMutation.isPending}
-                onClick={handleSubmit}
-              >
-                {submissionMutation.isPending ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : (
-                  <MoonStar className="mr-2 size-4" />
+              <>
+                {!attemptsExhausted && (
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    Attempt {nextAttemptNumber}/3 —{" "}
+                    <span className="font-semibold text-[var(--accent-gold)]">{nextMultiplierLabel} score multiplier</span>
+                  </p>
                 )}
-                Submit for weighted scoring
-              </Button>
+                <Button
+                  className="gold-button w-full"
+                  disabled={submissionMutation.isPending || attemptsExhausted}
+                  onClick={handleSubmit}
+                >
+                  {submissionMutation.isPending ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <MoonStar className="mr-2 size-4" />
+                  )}
+                  {attemptsExhausted ? "All 3 attempts used" : "Submit for weighted scoring"}
+                </Button>
+                {attemptsExhausted && (
+                  <p className="text-sm text-[var(--error)]">
+                    You've used all 3 attempts for this challenge.
+                  </p>
+                )}
+              </>
             ) : (
               <p className="text-sm text-[var(--text-secondary)]">Refine your prompt and regenerate.</p>
             )}
@@ -304,8 +325,10 @@ export default function ChallengeSolverPage() {
       {bestForCurrent ? (
         <Card className="glass-card">
           <CardContent className="p-4 text-sm text-[var(--text-secondary)]">
-            Your best: <span className="font-semibold text-[var(--accent-gold)]">{bestForCurrent.weightedScore}</span>{" "}
-            points. Beat it!
+            Your best:{" "}
+            <span className="font-semibold text-[var(--accent-gold)]">{bestForCurrent.weightedScore}</span> points · Attempts:{" "}
+            <span className="font-semibold text-[var(--accent-gold)]">{bestForCurrent.attemptCount}/3</span>
+            {bestForCurrent.attemptCount < 3 ? " — Beat it!" : " — No attempts left."}
           </CardContent>
         </Card>
       ) : null}

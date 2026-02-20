@@ -61,6 +61,7 @@ export const submissions = pgTable(
     totalTokens: integer("total_tokens").notNull(),
     promptQualityScore: integer("prompt_quality_score").notNull().default(0),
     similarityScore: integer("similarity_score").notNull().default(0),
+    rawWeightedScore: integer("raw_weighted_score").notNull().default(0),
     weightedScore: integer("weighted_score").notNull().default(0),
     passed: boolean("passed").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

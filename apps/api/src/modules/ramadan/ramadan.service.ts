@@ -37,6 +37,7 @@ type SubmissionMeRow = {
   similarityScore: number;
   weightedScore: number;
   createdAt: string;
+  attemptCount: number;
 };
 
 type BreakdownRow = {
@@ -54,6 +55,20 @@ const SIMILARITY_BLOCK_THRESHOLD = 0.8;
 const appEnv = (process.env.APP_ENV || "production").toLowerCase();
 const isDevelopment = appEnv === "development";
 const MIN_CORRECTNESS_TO_SUBMIT = 70;
+
+const MAX_ATTEMPTS = 3;
+
+// Multiplier applied to weighted_score based on which attempt number this is (1-based).
+// Attempts beyond MAX_ATTEMPTS are blocked entirely.
+const ATTEMPT_MULTIPLIERS: Record<number, number> = {
+  1: 1.0,
+  2: 0.9,
+  3: 0.75,
+};
+
+function getAttemptMultiplier(attemptNumber: number): number {
+  return ATTEMPT_MULTIPLIERS[attemptNumber] ?? 0.5;
+}
 function isChallengeUnlocked(unlocksAt: Date) {
   // Local DX: unlock all days in development.
   if (isDevelopment) return true;
@@ -235,9 +250,12 @@ interface RamadanService {
   }) => Promise<{
     id: number;
     totalTokens: number;
+    rawWeightedScore: number;
     weightedScore: number;
     correctnessScore: number;
     isNewBest: boolean;
+    attemptNumber: number;
+    multiplier: number;
   }>;
   getMyBestSubmissions: (userId: string) => Promise<SubmissionMeRow[]>;
   upsertUser: (params: {
@@ -314,12 +332,14 @@ export const ramadanService: RamadanService = {
 
     const rows = (await db.execute(sql<LeaderboardRow>`
       with best_per_user_challenge as (
-        select s.user_id, s.challenge_id,
-          max(s.weighted_score) as best_score,
-          min(s.created_at) as first_submitted_at
+        select distinct on (s.user_id, s.challenge_id)
+          s.user_id,
+          s.challenge_id,
+          s.weighted_score as best_score,
+          s.created_at     as first_submitted_at
         from submissions s
         where s.passed = true
-        group by s.user_id, s.challenge_id
+        order by s.user_id, s.challenge_id, s.weighted_score desc, s.created_at asc
       )
       select
         u.id as "userId",
@@ -357,12 +377,14 @@ export const ramadanService: RamadanService = {
 
     const rows = (await db.execute(sql<BreakdownRow>`
       with best_per_user_challenge as (
-        select s.user_id, s.challenge_id,
-          max(s.weighted_score) as best_score,
-          min(s.created_at) as first_submitted_at
+        select distinct on (s.user_id, s.challenge_id)
+          s.user_id,
+          s.challenge_id,
+          s.weighted_score as best_score,
+          s.created_at     as first_submitted_at
         from submissions s
         where s.passed = true
-        group by s.user_id, s.challenge_id
+        order by s.user_id, s.challenge_id, s.weighted_score desc, s.created_at asc
       ),
       ranked as (
         select
@@ -498,16 +520,41 @@ export const ramadanService: RamadanService = {
     const codeTokens = estimateTokens(generatedCodeValue);
     const totalTokens = promptTokens + codeTokens;
     const promptQualityScore = scorePromptQuality(promptValue);
-    const weightedScore = computeWeightedScore({
+
+    // Count existing PASSING submissions to determine attempt number.
+    // Uses submissions_user_challenge_idx (userId, challengeId) — cheap index scan.
+    const [passingCountRow] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(submissions)
+      .where(
+        and(
+          eq(submissions.userId, userId),
+          eq(submissions.challengeId, challengeId),
+          eq(submissions.passed, true)
+        )
+      );
+
+    const existingPassingCount = passingCountRow?.count ?? 0;
+    const attemptNumber = existingPassingCount + 1;
+
+    if (existingPassingCount >= MAX_ATTEMPTS) {
+      throw new BadRequestError(
+        `You've used all ${MAX_ATTEMPTS} attempts for this challenge`
+      );
+    }
+
+    // Compute raw score, then apply the diminishing multiplier for this attempt.
+    const multiplier = getAttemptMultiplier(attemptNumber);
+    const rawWeightedScore = computeWeightedScore({
       totalTokens,
       promptQualityScore,
       correctnessScore: serverValidation.correctnessScore,
     });
+    const weightedScore = Math.round(rawWeightedScore * multiplier);
 
+    // Check if this is a new personal best (compare against stored multiplied scores).
     const [best] = await db
-      .select({
-        weightedScore: submissions.weightedScore,
-      })
+      .select({ weightedScore: submissions.weightedScore })
       .from(submissions)
       .where(
         and(
@@ -529,6 +576,7 @@ export const ramadanService: RamadanService = {
       totalTokens,
       promptQualityScore,
       similarityScore,
+      rawWeightedScore,
       weightedScore,
       passed: true,
     };
@@ -544,31 +592,56 @@ export const ramadanService: RamadanService = {
     return {
       id: inserted.id,
       totalTokens,
+      rawWeightedScore,
       weightedScore,
       correctnessScore: serverValidation.correctnessScore,
       isNewBest,
+      attemptNumber,
+      multiplier,
     };
   },
 
   async getMyBestSubmissions(userId: string) {
     const rows = (await db.execute(sql<SubmissionMeRow>`
-      select distinct on (s.challenge_id)
-        s.challenge_id as "challengeId",
-        c.day_number as "dayNumber",
-        c.title as "title",
-        s.prompt as "prompt",
-        s.generated_code as "generatedCode",
-        s.prompt_tokens as "promptTokens",
-        s.code_tokens as "codeTokens",
-        s.total_tokens as "totalTokens",
-        s.prompt_quality_score as "promptQualityScore",
-        s.similarity_score as "similarityScore",
-        s.weighted_score as "weightedScore",
-        s.created_at as "createdAt"
-      from submissions s
-      join challenges c on c.id = s.challenge_id
-      where s.user_id = ${userId} and s.passed = true
-      order by s.challenge_id, s.weighted_score desc, s.created_at asc
+      with best as (
+        select distinct on (s.challenge_id)
+          s.challenge_id,
+          s.prompt,
+          s.generated_code,
+          s.prompt_tokens,
+          s.code_tokens,
+          s.total_tokens,
+          s.prompt_quality_score,
+          s.similarity_score,
+          s.weighted_score,
+          s.created_at
+        from submissions s
+        where s.user_id = ${userId} and s.passed = true
+        order by s.challenge_id, s.weighted_score desc, s.created_at asc
+      ),
+      attempt_counts as (
+        select challenge_id, count(*)::int as attempt_count
+        from submissions
+        where user_id = ${userId} and passed = true
+        group by challenge_id
+      )
+      select
+        best.challenge_id         as "challengeId",
+        c.day_number              as "dayNumber",
+        c.title                   as "title",
+        best.prompt               as "prompt",
+        best.generated_code       as "generatedCode",
+        best.prompt_tokens        as "promptTokens",
+        best.code_tokens          as "codeTokens",
+        best.total_tokens         as "totalTokens",
+        best.prompt_quality_score as "promptQualityScore",
+        best.similarity_score     as "similarityScore",
+        best.weighted_score       as "weightedScore",
+        best.created_at           as "createdAt",
+        coalesce(ac.attempt_count, 0) as "attemptCount"
+      from best
+      join challenges c on c.id = best.challenge_id
+      left join attempt_counts ac on ac.challenge_id = best.challenge_id
     `)) as SubmissionMeRow[];
 
     return rows;
