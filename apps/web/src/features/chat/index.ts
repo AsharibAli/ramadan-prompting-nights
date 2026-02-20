@@ -6,4 +6,4 @@ export * from "./chat-input/file-items";
 export * from "./chat-input/file-list";
 export * from "./conversation";
 export * from "./hooks";
-export * from "./store/chat-session-store";
+// chat-session-store removed — unused (chatId is derived in components directly)
