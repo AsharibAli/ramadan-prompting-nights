@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { memo, useRef } from "react";
+import { memo, useMemo, useRef } from "react";
 import type { ChatUIMessage } from "@/features/chat/chat.types";
 import { ChatContainerContent, ChatContainerRoot } from "@/features/chat/kit/chat-container";
 import { Loader } from "@/features/chat/kit/loader";
@@ -54,8 +54,13 @@ export function Conversation({
 }: ConversationProps) {
   const initialMessageCount = useRef(messages.length);
 
+  // Memoize findLast — avoids O(n) scan on every render during streaming
+  const lastAssistantMessage = useMemo(
+    () => messages.findLast((message) => message.role === "assistant"),
+    [messages]
+  );
+
   if (!messages || messages.length === 0) return <div className="h-full w-full"></div>;
-  const lastAssistantMessage = messages.findLast((message) => message.role === "assistant");
   const isLoading = status === "submitted" || lastAssistantMessage?.parts.length === 0;
 
   return (
