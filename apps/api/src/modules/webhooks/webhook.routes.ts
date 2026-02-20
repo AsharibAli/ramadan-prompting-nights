@@ -7,24 +7,34 @@ import { Hono } from "hono";
 import { Webhook } from "svix";
 import { ramadanService } from "@/modules/ramadan/ramadan.service";
 
-async function handleClerkWebhook(c: Context) {
-  const SIGNING_SECRET = process.env.CLERK_SIGNING_SECRET || process.env.CLERK_WEBHOOK_SECRET;
+// Singleton Svix Webhook instance — avoid re-creating on every request
+let _webhookInstance: Webhook | null = null;
+let _webhookError: string | null = null;
 
-  if (!SIGNING_SECRET) {
-    return c.json({ message: "Webhook skipped: signing secret missing" }, 200);
+function getWebhookInstance(): Webhook | null {
+  if (_webhookInstance) return _webhookInstance;
+  if (_webhookError) return null;
+
+  const secret = process.env.CLERK_SIGNING_SECRET || process.env.CLERK_WEBHOOK_SECRET;
+  if (!secret || secret.includes("your_clerk_webhook_secret")) {
+    _webhookError = "Webhook signing secret missing or placeholder";
+    return null;
   }
 
-  if (SIGNING_SECRET.includes("your_clerk_webhook_secret")) {
-    return c.json({ message: "Webhook skipped: placeholder signing secret" }, 200);
-  }
-
-  // Create new Svix instance with secret
-  let wh: Webhook;
   try {
-    wh = new Webhook(SIGNING_SECRET);
+    _webhookInstance = new Webhook(secret);
+    return _webhookInstance;
   } catch (error) {
+    _webhookError = "Invalid signing secret";
     logger.warn({ error }, "Invalid Clerk webhook signing secret");
-    return c.json({ message: "Webhook skipped: invalid signing secret" }, 200);
+    return null;
+  }
+}
+
+async function handleClerkWebhook(c: Context) {
+  const wh = getWebhookInstance();
+  if (!wh) {
+    return c.json({ message: `Webhook skipped: ${_webhookError}` }, 200);
   }
   // Get headers
   const svix_id = c.req.header("svix-id");
@@ -81,7 +91,6 @@ async function handleClerkWebhook(c: Context) {
 }
 
 const webhookRoutes = new Hono()
-  .post("/", async (c) => handleClerkWebhook(c))
-  .post("/clerk", async (c) => handleClerkWebhook(c));
+  .post("/", async (c) => handleClerkWebhook(c));
 
 export { webhookRoutes };
