@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import type { ChatUIMessage } from "@/features/chat/chat.types";
-import { useChatDraft } from "@/features/chat/hooks/use-chat-drafts";
 
 type UseChatHandlersProps = {
   messages: ChatUIMessage[];
@@ -11,6 +10,8 @@ type UseChatHandlersProps = {
   setSelectedModel: (model: string) => void;
   selectedModel: string;
   chatId: string | null;
+  /** Pass the setDraftValue from the parent useChatDraft to avoid creating a duplicate instance */
+  setDraftValue?: (value: string) => void;
 };
 
 export function useChatHandlers({
@@ -20,13 +21,12 @@ export function useChatHandlers({
   setSelectedModel,
   selectedModel,
   chatId,
+  setDraftValue,
 }: UseChatHandlersProps) {
-  const { setDraftValue } = useChatDraft(chatId);
-
   const handleInputChange = useCallback(
     (value: string) => {
       setInput(value);
-      setDraftValue(value);
+      setDraftValue?.(value);
     },
     [setInput, setDraftValue]
   );
@@ -40,18 +40,18 @@ export function useChatHandlers({
 
   const handleDelete = useCallback(
     (id: string) => {
-      setMessages(messages.filter((message) => message.id !== id));
+      setMessages((prev: ChatUIMessage[]) => prev.filter((message) => message.id !== id));
     },
-    [messages, setMessages]
+    [setMessages]
   );
 
   const handleEdit = useCallback(
     (id: string, newText: string) => {
-      setMessages(
-        messages.map((message) => (message.id === id ? { ...message, content: newText } : message))
+      setMessages((prev: ChatUIMessage[]) =>
+        prev.map((message) => (message.id === id ? { ...message, content: newText } : message))
       );
     },
-    [messages, setMessages]
+    [setMessages]
   );
 
   return {
