@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -15,6 +15,18 @@ export function FileItem({ file, onRemove }: FileItemProps) {
   const [isRemoving, setIsRemoving] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Create objectURL once and revoke on unmount to prevent memory leaks
+  const objectUrl = useMemo(
+    () => (file.type.includes("image") ? URL.createObjectURL(file) : null),
+    [file]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [objectUrl]);
+
   const handleRemove = () => {
     setIsRemoving(true);
     onRemove(file);
@@ -26,12 +38,12 @@ export function FileItem({ file, onRemove }: FileItemProps) {
         <HoverCardTrigger className="w-full">
           <div className="flex w-full items-center gap-3 rounded-2xl border border-input bg-background p-2 pr-3 transition-colors hover:bg-accent">
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-accent-foreground">
-              {file.type.includes("image") ? (
+              {objectUrl ? (
                 <Image
                   alt={file.name}
                   className="h-full w-full object-cover"
                   height={40}
-                  src={URL.createObjectURL(file)}
+                  src={objectUrl}
                   width={40}
                 />
               ) : (
@@ -47,13 +59,15 @@ export function FileItem({ file, onRemove }: FileItemProps) {
           </div>
         </HoverCardTrigger>
         <HoverCardContent side="top">
-          <Image
-            alt={file.name}
-            className="h-full w-full object-cover"
-            height={200}
-            src={URL.createObjectURL(file)}
-            width={200}
-          />
+          {objectUrl && (
+            <Image
+              alt={file.name}
+              className="h-full w-full object-cover"
+              height={200}
+              src={objectUrl}
+              width={200}
+            />
+          )}
         </HoverCardContent>
       </HoverCard>
       {isRemoving ? null : (
