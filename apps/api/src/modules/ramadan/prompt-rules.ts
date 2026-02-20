@@ -22,20 +22,46 @@ export function validateStructuredPrompt(prompt: string) {
   };
 }
 
+/**
+ * Score prompt quality on a 0–100 scale using three additive components:
+ *
+ *   Structure  (60 pts) — 15 per required section (Goal, Constraints, Edge Cases, Output Format)
+ *   Depth      (20 pts) — linear ramp from 0 at 0 chars to 20 at ≥200 chars
+ *   Specificity(20 pts) — ~2.86 per constraint keyword hit, capped at 20
+ *
+ * The three components sum to exactly 100 at maximum. No clamping overshoot.
+ */
 export function scorePromptQuality(prompt: string) {
   const trimmed = prompt.trim();
-  const sectionScore = REQUIRED_SECTIONS.reduce((score, section) => {
-    return score + (hasSection(trimmed, section) ? 22 : 0);
-  }, 0);
+  const lowered = normalize(trimmed);
 
-  const lengthScore = trimmed.length >= 140 ? 8 : trimmed.length >= 90 ? 5 : 2;
-  const constraintKeywords = ["must", "should", "avoid", "handle", "return", "input", "output"];
-  const keywordHits = constraintKeywords.reduce((count, keyword) => {
-    return count + (normalize(trimmed).includes(keyword) ? 1 : 0);
-  }, 0);
-  const keywordScore = Math.min(10, keywordHits * 2);
+  // ── Structure: 15 pts × 4 sections = 60 pts max ──
+  const POINTS_PER_SECTION = 15;
+  const structureScore = REQUIRED_SECTIONS.reduce(
+    (score, section) => score + (hasSection(trimmed, section) ? POINTS_PER_SECTION : 0),
+    0
+  );
 
-  return Math.min(100, sectionScore + lengthScore + keywordScore);
+  // ── Depth: continuous 0–20 based on prompt length ──
+  // Linear ramp: 0 at 0 chars, 20 at ≥200 chars
+  const MAX_DEPTH = 20;
+  const DEPTH_THRESHOLD = 200;
+  const depthScore = Math.min(MAX_DEPTH, Math.round((trimmed.length / DEPTH_THRESHOLD) * MAX_DEPTH));
+
+  // ── Specificity: keyword presence, 0–20 pts ──
+  const CONSTRAINT_KEYWORDS = ["must", "should", "avoid", "handle", "return", "input", "output"];
+  const MAX_SPECIFICITY = 20;
+  const keywordHits = CONSTRAINT_KEYWORDS.reduce(
+    (count, keyword) => count + (lowered.includes(keyword) ? 1 : 0),
+    0
+  );
+  // Each keyword contributes proportionally: 20/7 ≈ 2.86 pts
+  const specificityScore = Math.min(
+    MAX_SPECIFICITY,
+    Math.round((keywordHits / CONSTRAINT_KEYWORDS.length) * MAX_SPECIFICITY)
+  );
+
+  return structureScore + depthScore + specificityScore;
 }
 
 export function getPromptFormatHint() {
