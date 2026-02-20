@@ -15,6 +15,9 @@ export type CreateChatMessageParams = {
   messages: UIMessage[];
 };
 
+// Use a cheap model for title generation — Haiku is 10-20x cheaper than Sonnet
+const TITLE_MODEL = process.env.TITLE_MODEL || "claude-haiku-4-20250514";
+
 export const chatService = {
   async getChats({ userId }: { userId: string }) {
     const result = await db
@@ -48,6 +51,7 @@ export const chatService = {
     const newChat = await this.createChat({ userId, id });
 
     if (firstMessage) {
+      // Fire-and-forget: don't block the response
       this.generateChatTitle({ chatId: id, userId, firstMessage });
     }
 
@@ -65,7 +69,7 @@ export const chatService = {
   }) {
     try {
       const { text } = await generateText({
-        model: anthropic("claude-4-sonnet-20250514"),
+        model: anthropic(TITLE_MODEL),
         prompt: `Generate a concise title (max 5 words) for a chat that starts with this message. Only respond with the title, nothing else:\n\n"${firstMessage}"`,
         maxOutputTokens: 20,
       });
@@ -131,7 +135,7 @@ export const chatService = {
     return { success: true };
   },
 
-  // Get all messages for a chat
+  // Get all messages for a chat — ownership verified via JOIN (single query)
   async getChatMessages({
     chatId,
     userId,
@@ -141,14 +145,31 @@ export const chatService = {
     userId: string;
     limit?: number;
   }) {
-    await chatService.getChatById({ id: chatId, userId });
-
     const result = await db
-      .select()
+      .select({
+        id: chatMessages.id,
+        chatId: chatMessages.chatId,
+        message: chatMessages.message,
+        createdAt: chatMessages.createdAt,
+        updatedAt: chatMessages.updatedAt,
+      })
       .from(chatMessages)
+      .innerJoin(chats, and(eq(chatMessages.chatId, chats.id), eq(chats.userId, userId)))
       .where(eq(chatMessages.chatId, chatId))
       .orderBy(asc(chatMessages.createdAt))
       .limit(limit ?? 30);
+
+    if (result.length === 0) {
+      // Verify the chat exists and belongs to the user
+      const [chat] = await db
+        .select({ id: chats.id })
+        .from(chats)
+        .where(and(eq(chats.id, chatId), eq(chats.userId, userId)))
+        .limit(1);
+      if (!chat) {
+        throw new NotFoundError("Chat not found");
+      }
+    }
 
     const messages = result.map((m) => {
       return {
@@ -178,7 +199,7 @@ export const chatService = {
     return { success: true };
   },
 
-  // Get a single chat message by ID
+  // Get a single chat message by ID (ownership via JOIN)
   async getChatMessageById({ id, userId }: { id: string; userId: string }) {
     const [result] = await db
       .select({
@@ -200,7 +221,7 @@ export const chatService = {
     return result;
   },
 
-  // Update a chat message
+  // Update a chat message — ownership verified via subquery in WHERE
   async updateChatMessage({
     id,
     userId,
@@ -210,6 +231,7 @@ export const chatService = {
     userId: string;
     message: UIMessage;
   }) {
+    // Verify ownership first (single query via JOIN)
     await chatService.getChatMessageById({ id, userId });
 
     const [result] = await db
