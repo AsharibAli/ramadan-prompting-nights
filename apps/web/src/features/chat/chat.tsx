@@ -5,7 +5,7 @@ import { newIdWithoutPrefix } from "@repo/id";
 import { DefaultChatTransport } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ChatInput, Conversation, useChatHandlers } from "@/features/chat";
 import { useChatDraft } from "@/features/chat/hooks/use-chat-drafts";
@@ -26,15 +26,18 @@ export function Chat({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [input, setInput] = useState("");
-  const { clearDraft, getDraft } = useChatDraft(id);
+  const { clearDraft, getDraft, setDraftValue } = useChatDraft(id);
 
   const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
 
-  const { error, status, sendMessage, messages, setMessages, regenerate, stop } =
-    useChat<ChatUIMessage>({
-      id: id ?? undefined,
-      messages: initialMessages,
-      transport: new DefaultChatTransport({
+  // Use refs to avoid recreating the transport when selectedModel changes
+  const selectedModelRef = useRef(selectedModel);
+  selectedModelRef.current = selectedModel;
+
+  // Memoize transport — only recreate when `id` changes (new chat), not on every render
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
         api: chatUrl,
         fetch: customFetcher as typeof fetch,
         prepareSendMessagesRequest: ({ messages }) => {
@@ -42,11 +45,19 @@ export function Chat({
             body: {
               message: messages.at(-1),
               chatId: id,
-              model: selectedModel,
+              model: selectedModelRef.current,
             },
           };
         },
       }),
+    [id]
+  );
+
+  const { error, status, sendMessage, messages, setMessages, regenerate, stop } =
+    useChat<ChatUIMessage>({
+      id: id ?? undefined,
+      messages: initialMessages,
+      transport,
 
       onError: (error) => {
         if (error) {
@@ -62,11 +73,8 @@ export function Chat({
       },
     });
 
-  useEffect(() => {
-    if (initialMessages.length > 0) {
-      setMessages(initialMessages);
-    }
-  }, [initialMessages]);
+  // Removed redundant useEffect that was calling setMessages(initialMessages)
+  // — useChat already receives initialMessages as the `messages` prop and syncs internally.
 
   const { handleInputChange, handleModelChange, handleDelete, handleEdit } = useChatHandlers({
     messages,
@@ -75,9 +83,10 @@ export function Chat({
     setSelectedModel,
     selectedModel,
     chatId: id,
+    setDraftValue,
   });
 
-  const submit = async () => {
+  const submit = useCallback(async () => {
     setIsSubmitting(true);
 
     setInput("");
@@ -104,7 +113,7 @@ export function Chat({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [input, id, sendMessage, clearDraft, router]);
 
   const handleSuggestion = useCallback(
     async (suggestion: string) => {
@@ -126,7 +135,7 @@ export function Chat({
     [id, selectedModel, sendMessage]
   );
 
-  const handleReload = async () => {
+  const handleReload = useCallback(async () => {
     const options = {
       body: {
         chatId: id,
@@ -135,7 +144,11 @@ export function Chat({
     };
 
     regenerate(options);
-  };
+  }, [id, selectedModel, regenerate]);
+
+  // Stable no-op callbacks to avoid re-renders
+  const noopFileRemove = useCallback(() => {}, []);
+  const noopFileUpload = useCallback((_files: File[]) => {}, []);
 
   return (
     <div
@@ -172,8 +185,8 @@ export function Chat({
           hasSuggestions={false}
           isSubmitting={isSubmitting}
           messageCount={messages.length}
-          onFileRemove={() => {}}
-          onFileUpload={() => {}}
+          onFileRemove={noopFileRemove}
+          onFileUpload={noopFileUpload}
           onSelectModel={handleModelChange}
           onSend={submit}
           onSuggestion={handleSuggestion}
