@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   apiRpc,
@@ -38,9 +38,11 @@ export async function getChallengeByDay(dayNumber: number) {
   return callRpc(client.challenges[":dayNumber"].$get({ param: { dayNumber: String(dayNumber) } }));
 }
 
-export async function getLeaderboard() {
+export async function getLeaderboard(page = 1, limit = 100) {
   const client = await getApiClient();
-  return callRpc(client.leaderboard.$get());
+  return callRpc(
+    client.leaderboard.$get({ query: { page: String(page), limit: String(limit) } })
+  );
 }
 
 export async function getLeaderboardBreakdown() {
@@ -79,10 +81,13 @@ export function useGetChallenge(dayNumber: number, enabled = true) {
   });
 }
 
-export function useGetLeaderboard() {
-  return useQuery({
-    queryKey: ["ramadan", "leaderboard"],
-    queryFn: getLeaderboard,
+export function useGetLeaderboard(pageSize = 100) {
+  return useInfiniteQuery({
+    queryKey: ["ramadan", "leaderboard", { pageSize }],
+    queryFn: ({ pageParam }) => getLeaderboard(pageParam, pageSize),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+      lastPage.hasMore ? lastPageParam + 1 : undefined,
   });
 }
 
