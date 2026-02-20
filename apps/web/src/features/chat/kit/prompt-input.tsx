@@ -76,7 +76,15 @@ function PromptInput({
           "cursor-text rounded-3xl border border-input bg-background p-2 shadow-xs",
           className
         )}
+        role="button"
+        tabIndex={0}
         onClick={() => textareaRef.current?.focus()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            textareaRef.current?.focus();
+          }
+        }}
       >
         {children}
       </div>

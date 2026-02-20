@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function LinkMarkdown({ href, children, ...props }: React.ComponentProps<"a">) {
   if (!href) return <span {...props}>{children}</span>;
 
@@ -18,12 +20,13 @@ export function LinkMarkdown({ href, children, ...props }: React.ComponentProps<
       rel="noopener noreferrer"
       target="_blank"
     >
-      <img
+      <Image
         alt="favicon"
         className="size-3.5 rounded-full"
         height={14}
         src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(href)}`}
         width={14}
+        unoptimized
       />
       <span className="overflow-hidden text-ellipsis whitespace-nowrap font-normal">
         {domain.replace("www.", "")}

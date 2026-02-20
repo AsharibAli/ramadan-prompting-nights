@@ -20,8 +20,8 @@ export default function TestPostsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto space-y-4 p-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i}>
+        {["skeleton-1", "skeleton-2", "skeleton-3"].map((key) => (
+          <Card key={key}>
             <CardHeader>
               <Skeleton className="h-4 w-[250px]" />
             </CardHeader>

@@ -2,6 +2,33 @@
 
 import { cn } from "@/lib/utils";
 
+const SPINNER_BARS = Array.from({ length: 12 }, (_, i) => ({
+  key: `spinner-${i}`,
+  rotation: i * 30,
+  delay: `${i * 0.1}s`,
+}));
+
+const BOUNCE_DOTS = Array.from({ length: 3 }, (_, i) => ({
+  key: `bounce-${i}`,
+  delay: `${i * 160}ms`,
+}));
+
+const TYPING_DOTS = Array.from({ length: 3 }, (_, i) => ({
+  key: `typing-${i}`,
+  delay: `${i * 250}ms`,
+}));
+
+const WAVE_BARS = Array.from({ length: 5 }, (_, i) => ({
+  key: `wave-${i}`,
+  delay: `${i * 100}ms`,
+  heightIndex: i,
+}));
+
+const BAR_ITEMS = Array.from({ length: 3 }, (_, i) => ({
+  key: `bar-${i}`,
+  delay: `${i * 0.2}s`,
+}));
+
 export interface LoaderProps {
   variant?:
     | "circular"
@@ -69,18 +96,18 @@ export function ClassicLoader({
   return (
     <div className={cn("relative", sizeClasses[size], className)}>
       <div className="absolute h-full w-full">
-        {[...new Array(12)].map((_, i) => (
+        {SPINNER_BARS.map((bar) => (
           <div
             className="absolute animate-[spinner-fade_1.2s_linear_infinite] rounded-full bg-primary"
-            key={i}
+            key={bar.key}
             style={{
               top: "0",
               left: "50%",
               marginLeft: size === "sm" ? "-0.75px" : size === "lg" ? "-1.25px" : "-1px",
               transformOrigin: `${size === "sm" ? "0.75px" : size === "lg" ? "1.25px" : "1px"} ${size === "sm" ? "10px" : size === "lg" ? "14px" : "12px"}`,
-              transform: `rotate(${i * 30}deg)`,
+              transform: `rotate(${bar.rotation}deg)`,
               opacity: 0,
-              animationDelay: `${i * 0.1}s`,
+              animationDelay: bar.delay,
               height: barSizes[size].height,
               width: barSizes[size].width,
             }}
@@ -160,15 +187,15 @@ export function DotsLoader({
 
   return (
     <div className={cn("flex items-center space-x-1", containerSizes[size], className)}>
-      {[...new Array(3)].map((_, i) => (
+      {BOUNCE_DOTS.map((dot) => (
         <div
           className={cn(
             "animate-[bounce-dots_1.4s_ease-in-out_infinite] rounded-full bg-primary",
             dotSizes[size]
           )}
-          key={i}
+          key={dot.key}
           style={{
-            animationDelay: `${i * 160}ms`,
+            animationDelay: dot.delay,
           }}
         />
       ))}
@@ -198,12 +225,12 @@ export function TypingLoader({
 
   return (
     <div className={cn("flex items-center space-x-1", containerSizes[size], className)}>
-      {[...new Array(3)].map((_, i) => (
+      {TYPING_DOTS.map((dot) => (
         <div
           className={cn("animate-[typing_1s_infinite] rounded-full bg-primary", dotSizes[size])}
-          key={i}
+          key={dot.key}
           style={{
-            animationDelay: `${i * 250}ms`,
+            animationDelay: dot.delay,
           }}
         />
       ))}
@@ -239,16 +266,16 @@ export function WaveLoader({
 
   return (
     <div className={cn("flex items-center gap-0.5", containerSizes[size], className)}>
-      {[...new Array(5)].map((_, i) => (
+      {WAVE_BARS.map((bar) => (
         <div
           className={cn(
             "animate-[wave_1s_ease-in-out_infinite] rounded-full bg-primary",
             barWidths[size]
           )}
-          key={i}
+          key={bar.key}
           style={{
-            animationDelay: `${i * 100}ms`,
-            height: heights[size][i],
+            animationDelay: bar.delay,
+            height: heights[size][bar.heightIndex],
           }}
         />
       ))}
@@ -278,15 +305,15 @@ export function BarsLoader({
 
   return (
     <div className={cn("flex", containerSizes[size], className)}>
-      {[...new Array(3)].map((_, i) => (
+      {BAR_ITEMS.map((bar) => (
         <div
           className={cn(
             "h-full animate-[wave-bars_1.2s_ease-in-out_infinite] bg-primary",
             barWidths[size]
           )}
-          key={i}
+          key={bar.key}
           style={{
-            animationDelay: `${i * 0.2}s`,
+            animationDelay: bar.delay,
           }}
         />
       ))}

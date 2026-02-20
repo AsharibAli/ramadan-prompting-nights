@@ -97,7 +97,7 @@ export function MessageUser({
         if (part.type !== "file") return null;
 
         return (
-          <div className="flex flex-row gap-2" key={`file-${index}`}>
+          <div className="flex flex-row gap-2" key={part.url}>
             {part.mediaType?.startsWith("image") ? (
               <MorphingDialog
                 transition={{

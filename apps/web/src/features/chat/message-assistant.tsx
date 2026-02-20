@@ -26,7 +26,7 @@ type MessageAssistantProps = {
 const renderToolPart = (part: ChatUIMessage["parts"][number], index: number): React.ReactNode => {
   if (!part.type?.startsWith("tool-")) return null;
 
-  return <Tool key={`${part.type}-${index}`} toolPart={part as ToolPart} />;
+  return <Tool key={`${part.type}-${(part as ToolPart).toolCallId}`} toolPart={part as ToolPart} />;
 };
 
 function MessageAssistantComponent({

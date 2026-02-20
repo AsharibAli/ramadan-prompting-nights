@@ -23,6 +23,10 @@ import { estimateTokens } from "@repo/db/utils/tokens";
 import { runChallengeTest, type TestResult } from "@/lib/challenge-test-runner";
 import { getCountdownParts, toPktLabel } from "@/lib/ramadan-time";
 
+interface NumberedTestResult extends TestResult {
+  testNumber: number;
+}
+
 function difficultyClassName(difficulty: string) {
   if (difficulty === "Easy") return "bg-emerald-500/20 text-emerald-300";
   if (difficulty === "Medium") return "bg-amber-500/20 text-amber-300";
@@ -41,10 +45,9 @@ export default function ChallengeSolverPage() {
   const dayNumber = Number(params.dayNumber);
 
   const [prompt, setPrompt] = useState("");
-  const [generatedCode, setGeneratedCode] = useState("");
-  const [promptTokens, setPromptTokens] = useState(0);
-  const [codeTokens, setCodeTokens] = useState(0);
-  const [results, setResults] = useState<TestResult[]>([]);
+  const [generation, setGeneration] = useState({ code: "", promptTokens: 0, codeTokens: 0 });
+  const { code: generatedCode, promptTokens, codeTokens } = generation;
+  const [results, setResults] = useState<NumberedTestResult[]>([]);
   const [isRunningTests, setIsRunningTests] = useState(false);
 
   const { data: challenges = [] } = useGetChallenges();
@@ -98,9 +101,7 @@ export default function ChallengeSolverPage() {
       challengeDescription: challenge.description,
       functionName: challenge.functionName,
     });
-    setGeneratedCode(response.code);
-    setPromptTokens(response.promptTokens);
-    setCodeTokens(response.codeTokens);
+    setGeneration({ code: response.code, promptTokens: response.promptTokens, codeTokens: response.codeTokens });
     setResults([]);
   };
 
@@ -118,7 +119,7 @@ export default function ChallengeSolverPage() {
         })
       )
     );
-    setResults(output);
+    setResults(output.map((r, i) => ({ ...r, testNumber: i + 1 })));
     setIsRunningTests(false);
   };
 
@@ -270,9 +271,9 @@ export default function ChallengeSolverPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {results.map((result, index) => (
-              <div className="rounded border border-[var(--border)] p-3" key={index}>
-                <p className="text-xs text-[var(--text-secondary)]">Test {index + 1}</p>
+            {results.map((result) => (
+              <div className="rounded border border-[var(--border)] p-3" key={`test-${result.testNumber}`}>
+                <p className="text-xs text-[var(--text-secondary)]">Test {result.testNumber}</p>
                 <p className={result.passed ? "text-[var(--success)]" : "text-[var(--error)]"}>
                   {result.passed ? "Pass" : `Fail - got: ${String(result.got)}`}
                 </p>

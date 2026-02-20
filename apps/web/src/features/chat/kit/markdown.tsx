@@ -107,11 +107,11 @@ function MarkdownComponent({
 
   return (
     <div className={className}>
-      {blocks.map((block, index) => (
+      {blocks.map((block) => (
         <MemoizedMarkdownBlock
           components={components}
           content={block}
-          key={`${blockId}-block-${index}`}
+          key={`${blockId}-${block}`}
         />
       ))}
     </div>
