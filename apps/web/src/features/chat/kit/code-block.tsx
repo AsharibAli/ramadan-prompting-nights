@@ -4,7 +4,6 @@
 import { useTheme } from "next-themes";
 import type React from "react";
 import { useEffect, useState } from "react";
-// Dynamic import — avoids loading ~1.5MB Shiki bundle eagerly
 const importShiki = () => import("shiki").then((m) => m.codeToHtml);
 import { cn } from "@/lib/utils";
 
@@ -46,29 +45,30 @@ function CodeBlockCode({
   const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    async function highlight() {
-      if (!code || typeof code !== "string") {
-        setHighlightedHtml(`<pre><code>${code || ""}</code></pre>`);
-        return;
-      }
+    if (!code || typeof code !== "string") {
+      setHighlightedHtml(null);
+      return;
+    }
 
+    let cancelled = false;
+    async function highlight() {
       try {
         const codeToHtml = await importShiki();
         const html = await codeToHtml(code, {
           lang: language,
           theme: appTheme === "dark" ? "github-dark" : "github-light",
         });
-        setHighlightedHtml(html);
-      } catch (error) {
-        setHighlightedHtml(`<pre><code>${code}</code></pre>`);
+        if (!cancelled) setHighlightedHtml(html);
+      } catch {
+        if (!cancelled) setHighlightedHtml(null);
       }
     }
     highlight();
+    return () => { cancelled = true; };
   }, [code, language, theme, appTheme]);
 
   const classNames = cn("w-full overflow-x-auto text-[13px] [&>pre]:px-4 [&>pre]:py-4", className);
 
-  // SSR fallback: render plain code if not hydrated yet
   return highlightedHtml ? (
     <div className={classNames} dangerouslySetInnerHTML={{ __html: highlightedHtml }} {...props} />
   ) : (

@@ -1,6 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { AnimatePresence, LazyMotion, domAnimation, m, type Transition } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader } from "@/features/chat/kit/loader";
 import { Markdown } from "@/features/chat/kit/markdown";
 import { cn } from "@/lib/utils";
@@ -17,16 +17,8 @@ const TRANSITION: Transition = {
 };
 
 export function Reasoning({ reasoning, isReasoning = false }: ReasoningProps) {
-  const [isExpanded, setIsExpanded] = useState(isReasoning);
-
-  useEffect(() => {
-    if (isReasoning) {
-      setIsExpanded(true);
-    } else {
-      const timer = setTimeout(() => setIsExpanded(false), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isReasoning]);
+  const [isManuallyExpanded, setIsManuallyExpanded] = useState(false);
+  const isExpanded = isReasoning || isManuallyExpanded;
 
   return (
     <LazyMotion features={domAnimation}>
@@ -34,7 +26,7 @@ export function Reasoning({ reasoning, isReasoning = false }: ReasoningProps) {
         <button
           className="flex items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
           disabled={isReasoning}
-          onClick={() => !isReasoning && setIsExpanded(!isExpanded)}
+          onClick={() => !isReasoning && setIsManuallyExpanded(!isManuallyExpanded)}
           type="button"
         >
           {isReasoning ? (
