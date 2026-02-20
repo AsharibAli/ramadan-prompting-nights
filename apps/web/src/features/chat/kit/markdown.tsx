@@ -1,5 +1,4 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: Used for parsing markdown */
-import { marked } from "marked";
 import { memo, useId, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkBreaks from "remark-breaks";
@@ -14,9 +13,29 @@ export type MarkdownProps = {
   components?: Partial<Components>;
 };
 
+/**
+ * Lightweight block splitter — replaces `marked.lexer()` to eliminate the ~40KB `marked` bundle.
+ * Splits on double newlines (paragraph boundaries) while preserving fenced code blocks as single units.
+ */
+const FENCED_CODE_RE = /^```[\s\S]*?^```/gm;
+
 function parseMarkdownIntoBlocks(markdown: string): string[] {
-  const tokens = marked.lexer(markdown);
-  return tokens.map((token) => token.raw);
+  // Preserve fenced code blocks by replacing them with placeholders
+  const codeBlocks: string[] = [];
+  const withPlaceholders = markdown.replace(FENCED_CODE_RE, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+  });
+
+  // Split on double newlines
+  const rawBlocks = withPlaceholders.split(/\n{2,}/);
+
+  // Restore code blocks and filter empties
+  return rawBlocks
+    .map((block) =>
+      block.replace(/__CODE_BLOCK_(\d+)__/g, (_, idx) => codeBlocks[Number(idx)]!)
+    )
+    .filter((block) => block.trim().length > 0);
 }
 
 function extractLanguage(className?: string): string {
