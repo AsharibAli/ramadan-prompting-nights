@@ -1,6 +1,6 @@
 import type { UIMessage as MessageType } from "ai";
 import equal from "fast-deep-equal";
-import { memo, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 
 import type { ChatUIMessage } from "@/features/chat/chat.types";
 import { MessageAssistant } from "./message-assistant";
@@ -30,8 +30,9 @@ function MessageComponent({
   status,
 }: MessageProps) {
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const copyToClipboard = () => {
+  const copyToClipboard = useCallback(() => {
     navigator.clipboard.writeText(
       parts
         ?.filter((part) => part.type === "text")
@@ -39,8 +40,10 @@ function MessageComponent({
         .join("") ?? ""
     );
     setCopied(true);
-    setTimeout(() => setCopied(false), 500);
-  };
+    // Clear previous timer to prevent memory leaks if user clicks rapidly
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopied(false), 500);
+  }, [parts]);
 
   if (variant === "user") {
     return (
