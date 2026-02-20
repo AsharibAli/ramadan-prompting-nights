@@ -40,6 +40,9 @@ type ChatInputProps = {
   getDraft: (draftId?: string) => DraftData | null;
 };
 
+// Module-scope utility — avoids re-creating on every render
+const isOnlyWhitespace = (text: string) => !/[^\s]/.test(text);
+
 export function ChatInput({
   value,
   onValueChange,
@@ -61,7 +64,6 @@ export function ChatInput({
   messageCount,
   chatId,
 }: ChatInputProps) {
-  const isOnlyWhitespace = (text: string) => !/[^\s]/.test(text);
 
   const handleSend = useCallback(() => {
     if (isSubmitting) {
@@ -111,12 +113,8 @@ export function ChatInput({
 
       if (hasImageContent) {
         e.preventDefault();
-        return;
-      }
 
-      if (hasImageContent) {
         const imageFiles: File[] = [];
-
         for (const item of Array.from(items)) {
           if (item.type.startsWith("image/")) {
             const file = item.getAsFile();
