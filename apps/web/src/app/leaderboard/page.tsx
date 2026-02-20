@@ -1,15 +1,33 @@
 "use client";
 
-import { Trophy } from "lucide-react";
-import Link from "next/link";
+import { ChevronDown, Trophy } from "lucide-react";
+import { useMemo } from "react";
 import { MainHeader } from "@/components/layout/main-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetLeaderboard } from "@/api/ramadan.api";
 
+const PAGE_SIZE = 100;
+
 export default function LeaderboardPage() {
-  const { data, isLoading, isError } = useGetLeaderboard();
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useGetLeaderboard(PAGE_SIZE);
+
+  // Flatten all pages into a single entries array
+  const allEntries = useMemo(
+    () => data?.pages.flatMap((page) => page.entries) ?? [],
+    [data]
+  );
+
+  const total = data?.pages[0]?.total ?? 0;
 
   if (isLoading) {
     return (
@@ -25,7 +43,7 @@ export default function LeaderboardPage() {
     return <p className="px-4 py-8 text-[var(--error)]">Unable to load leaderboard right now.</p>;
   }
 
-  const [first, second, third, ...rest] = data;
+  const [first, second, third, ...rest] = allEntries;
 
   return (
     <div className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 py-10">
@@ -36,6 +54,9 @@ export default function LeaderboardPage() {
           <h1 className="font-display text-4xl text-[var(--text-primary)]">Leaderboard</h1>
           <p className="text-[var(--text-secondary)]">
             Ranked by highest weighted score across all scenario challenges
+            {total > 0 && (
+              <span className="ml-2 text-xs">({total} participants)</span>
+            )}
           </p>
         </div>
         <Trophy className="size-8 text-[var(--accent-gold)]" />
@@ -78,6 +99,32 @@ export default function LeaderboardPage() {
                 </Badge>
               </div>
             ))
+          )}
+
+          {hasNextPage && (
+            <div className="flex flex-col items-center gap-2 pt-4">
+              <p className="text-xs text-[var(--text-secondary)]">
+                Showing {allEntries.length} of {total} participants
+              </p>
+              <Button
+                className="gap-2"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+                variant="outline"
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="size-4" />
+                    Show next {Math.min(PAGE_SIZE, total - allEntries.length)}
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
