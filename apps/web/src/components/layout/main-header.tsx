@@ -12,14 +12,14 @@ export function MainHeader() {
   const isDashboardRoute = pathname.startsWith("/dashboard");
 
   return (
-    <header className="mb-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-4 py-3 backdrop-blur-md">
-      <Link className="group flex items-center gap-2" href="/">
-        <MoonStar className="size-5 text-[var(--accent-gold)]" />
-        <p className="font-display text-lg text-[var(--text-primary)] transition group-hover:text-[var(--accent-gold)] md:text-xl">
+    <header className="mb-6 flex items-center justify-between gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] px-3 py-2.5 backdrop-blur-md md:mb-10 md:px-4 md:py-3">
+      <Link className="group flex min-w-0 items-center gap-2" href="/">
+        <MoonStar className="size-4 shrink-0 text-[var(--accent-gold)] md:size-5" />
+        <p className="truncate font-display text-base text-[var(--text-primary)] transition group-hover:text-[var(--accent-gold)] md:text-xl">
           Ramadan Prompting Nights
         </p>
       </Link>
-      <nav className="flex items-center gap-2">
+      <nav className="flex shrink-0 items-center gap-1.5 md:gap-2">
         {!isLeaderboardRoute ? (
           <Link href="/leaderboard">
             <Button
@@ -29,7 +29,7 @@ export function MainHeader() {
               variant={isDashboardRoute ? "default" : "ghost"}
             >
               <Trophy className="size-4" />
-              Leaderboard
+              <span className="hidden sm:inline">Leaderboard</span>
             </Button>
           </Link>
         ) : null}
@@ -44,7 +44,9 @@ export function MainHeader() {
           {!isDashboardRoute ? (
             <Link href="/dashboard">
               <Button className="gold-button gap-1" size="sm">
-                Dashboard <ArrowRight className="size-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Go</span>
+                <ArrowRight className="size-4" />
               </Button>
             </Link>
           ) : null}

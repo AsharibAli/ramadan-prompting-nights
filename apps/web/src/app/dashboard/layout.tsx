@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="relative z-10 flex min-h-screen">
       <DashboardSidebar challenges={challenges} submissions={submissions} />
-      <main className="min-w-0 flex-1 px-4 py-8 md:px-8">
+      <main className="min-w-0 flex-1 px-4 pt-16 pb-8 md:px-8 md:pt-8">
         <MainHeader />
         {children}
       </main>

@@ -46,41 +46,42 @@ export default function LeaderboardPage() {
   const [first, second, third, ...rest] = allEntries;
 
   return (
-    <div className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 py-10">
+    <div className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 py-6 md:py-10">
       <MainHeader />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-4xl text-[var(--text-primary)]">Leaderboard</h1>
-          <p className="text-[var(--text-secondary)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-3xl text-[var(--text-primary)] md:text-4xl">Leaderboard</h1>
+          <p className="mt-1 text-sm text-[var(--text-secondary)] md:text-base">
             Ranked by highest weighted score across all scenario challenges
             {total > 0 && (
-              <span className="ml-2 text-xs">({total} participants)</span>
+              <span className="ml-1 text-xs">({total} participants)</span>
             )}
           </p>
         </div>
-        <Trophy className="size-8 text-[var(--accent-gold)]" />
+        <Trophy className="size-7 shrink-0 text-[var(--accent-gold)] md:size-8" />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Top 3 — horizontal scroll on very small screens, grid on sm+ */}
+      <div className="grid gap-3 sm:grid-cols-3">
         {[first, second, third].map((entry, idx) => (
           <Card className="glass-card" key={entry?.userId ?? idx}>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle className="text-xl">#{idx + 1}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="font-semibold">{entry?.name ?? "—"}</p>
+              <p className="truncate font-semibold">{entry?.name ?? "—"}</p>
               <p className="text-sm text-[var(--text-secondary)]">
                 {entry?.challengesSolved ?? 0} solved
               </p>
-              <p className="mt-2 text-[var(--accent-gold)]">{entry?.totalScore ?? 0} points</p>
+              <p className="mt-2 text-[var(--accent-gold)]">{entry?.totalScore ?? 0} pts</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <Card className="glass-card">
-        <CardContent className="space-y-2 p-4">
+        <CardContent className="space-y-2 p-3 md:p-4">
           {rest.length === 0 ? (
             <p className="rounded-md border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-secondary)]">
               No ranks beyond top 3 yet.
@@ -88,13 +89,13 @@ export default function LeaderboardPage() {
           ) : (
             rest.map((entry) => (
               <div
-                className="grid grid-cols-[60px_1fr_auto_auto] items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2"
+                className="flex items-center gap-2 rounded-md border border-[var(--border)] px-3 py-2"
                 key={entry.userId}
               >
-                <p className="font-mono text-sm">#{entry.rank}</p>
-                <p>{entry.name}</p>
-                <p className="text-sm text-[var(--text-secondary)]">{entry.challengesSolved} solved</p>
-                <Badge className="bg-[var(--accent-gold-dim)] text-[var(--accent-gold)]">
+                <p className="w-10 shrink-0 font-mono text-sm">#{entry.rank}</p>
+                <p className="min-w-0 flex-1 truncate">{entry.name}</p>
+                <p className="hidden shrink-0 text-sm text-[var(--text-secondary)] sm:block">{entry.challengesSolved} solved</p>
+                <Badge className="shrink-0 bg-[var(--accent-gold-dim)] text-[var(--accent-gold)]">
                   {entry.totalScore}
                 </Badge>
               </div>

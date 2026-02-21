@@ -31,11 +31,11 @@ export default function DashboardHomePage() {
     <div className="space-y-6">
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle className="font-display text-3xl text-[var(--text-primary)]">
+          <CardTitle className="font-display text-2xl text-[var(--text-primary)] md:text-3xl">
             Welcome {displayName}
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
+        <CardContent className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-[var(--border)] bg-black/10 p-4">
             <p className="text-sm text-[var(--text-secondary)]">Your Challenges Completed</p>
             <p className="mt-1 font-semibold text-2xl">{completed}</p>
@@ -72,13 +72,13 @@ export default function DashboardHomePage() {
         </Card>
       ) : (
         <Card className="glass-card">
-          <CardContent className="flex items-center justify-between p-6">
+          <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-semibold text-lg">All 30 challenges are unlocked.</p>
               <p className="text-[var(--text-secondary)]">Push for the top leaderboard rank.</p>
             </div>
             <Link href="/leaderboard">
-              <Button className="gold-button">
+              <Button className="gold-button w-full sm:w-auto">
                 <Trophy className="mr-2 size-4" />
                 View leaderboard
               </Button>

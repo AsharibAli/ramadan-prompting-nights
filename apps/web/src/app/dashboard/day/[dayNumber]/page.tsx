@@ -205,7 +205,7 @@ export default function ChallengeSolverPage() {
             <Badge className={difficultyClassName(challenge.difficulty)}>{challenge.difficulty}</Badge>
             <Badge className="bg-purple-500/20 text-purple-300">Weighted scoring</Badge>
           </div>
-          <CardTitle className="font-display text-3xl text-[var(--text-primary)]">{challenge.title}</CardTitle>
+          <CardTitle className="font-display text-2xl text-[var(--text-primary)] md:text-3xl">{challenge.title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
@@ -213,8 +213,8 @@ export default function ChallengeSolverPage() {
             <p className="text-[var(--text-secondary)]">{challenge.description}</p>
           </div>
           <p className="font-medium text-sm text-[var(--text-primary)]">Example Output:</p>
-          <div className="rounded-lg border border-[var(--border)] bg-black/20 p-3 font-mono text-sm">
-            {challenge.exampleInput} {"->"} {challenge.exampleOutput}
+          <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-black/20 p-3 font-mono text-sm">
+            <span className="whitespace-pre-wrap break-all">{challenge.exampleInput} {"->"} {challenge.exampleOutput}</span>
           </div>
         </CardContent>
       </Card>
@@ -231,8 +231,8 @@ export default function ChallengeSolverPage() {
             value={prompt}
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-[var(--text-secondary)]">Prompt efficiency: {clientPromptTokens} tokens</p>
-            <Button className="gold-button" disabled={generateMutation.isPending} onClick={handleGenerate}>
+            <p className="text-sm text-[var(--text-secondary)]">Efficiency: {clientPromptTokens} tokens</p>
+            <Button className="gold-button w-full sm:w-auto" disabled={generateMutation.isPending} onClick={handleGenerate}>
               {generateMutation.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <MoonStar className="mr-2 size-4" />}
               {generateMutation.isPending ? "Generating..." : "Generate Code"}
             </Button>
@@ -255,15 +255,15 @@ export default function ChallengeSolverPage() {
               <pre className="font-mono text-sm text-[var(--text-primary)] whitespace-pre-wrap">{generatedCode}</pre>
             </ScrollArea>
 
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="text-[var(--text-secondary)]">Prompt tokens: {promptTokens}</span>
-              <span className="text-[var(--text-secondary)]">Code tokens: {codeTokens}</span>
-              <span className="rounded bg-[var(--accent-gold-dim)] px-2 py-1 font-semibold text-[var(--accent-gold)]">
-                Efficiency total: {totalTokens}
+            <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+              <span className="text-[var(--text-secondary)]">Prompt: {promptTokens} tok</span>
+              <span className="text-[var(--text-secondary)]">Code: {codeTokens} tok</span>
+              <span className="col-span-2 rounded bg-[var(--accent-gold-dim)] px-2 py-1 text-center font-semibold text-[var(--accent-gold)] sm:col-span-1 sm:text-left">
+                Total: {totalTokens} tokens
               </span>
             </div>
 
-            <Button disabled={isRunningTests} onClick={runTests} variant="secondary">
+            <Button className="w-full sm:w-auto" disabled={isRunningTests} onClick={runTests} variant="secondary">
               {isRunningTests ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Play className="mr-2 size-4" />}
               Run Tests
             </Button>
