@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   apiRpc,
@@ -45,6 +45,11 @@ export async function getLeaderboard(page = 1, limit = 100) {
   );
 }
 
+export async function getMyLeaderboardRank() {
+  const client = await getApiClient();
+  return callRpc(client.leaderboard.me.$get());
+}
+
 export async function getLeaderboardBreakdown() {
   const client = await getApiClient();
   return callRpc(client.leaderboard.breakdown.$get());
@@ -81,13 +86,18 @@ export function useGetChallenge(dayNumber: number, enabled = true) {
   });
 }
 
-export function useGetLeaderboard(pageSize = 100) {
-  return useInfiniteQuery({
-    queryKey: ["ramadan", "leaderboard", { pageSize }],
-    queryFn: ({ pageParam }) => getLeaderboard(pageParam, pageSize),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
-      lastPage.hasMore ? lastPageParam + 1 : undefined,
+export function useGetLeaderboard(page: number, pageSize = 100) {
+  return useQuery({
+    queryKey: ["ramadan", "leaderboard", { page, pageSize }],
+    queryFn: () => getLeaderboard(page, pageSize),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useGetMyLeaderboardRank() {
+  return useQuery({
+    queryKey: ["ramadan", "leaderboard", "me"],
+    queryFn: getMyLeaderboardRank,
   });
 }
 

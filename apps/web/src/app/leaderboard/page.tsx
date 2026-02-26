@@ -1,7 +1,7 @@
 "use client";
 
-import { ChevronDown, Trophy } from "lucide-react";
-import { useMemo } from "react";
+import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { useState } from "react";
 import { MainHeader } from "@/components/layout/main-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,22 +12,12 @@ import { useGetLeaderboard } from "@/api/ramadan.api";
 const PAGE_SIZE = 100;
 
 export default function LeaderboardPage() {
-  const {
-    data,
-    isLoading,
-    isError,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-  } = useGetLeaderboard(PAGE_SIZE);
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isError, isPlaceholderData } = useGetLeaderboard(page, PAGE_SIZE);
 
-  // Flatten all pages into a single entries array
-  const allEntries = useMemo(
-    () => data?.pages.flatMap((page) => page.entries) ?? [],
-    [data]
-  );
-
-  const total = data?.pages[0]?.total ?? 0;
+  const entries = data?.entries ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -43,7 +33,10 @@ export default function LeaderboardPage() {
     return <p className="px-4 py-8 text-[var(--error)]">Unable to load leaderboard right now.</p>;
   }
 
-  const [first, second, third, ...rest] = allEntries;
+  // Top 3 only shown on page 1
+  const isFirstPage = page === 1;
+  const top3 = isFirstPage ? entries.slice(0, 3) : [];
+  const rest = isFirstPage ? entries.slice(3) : entries;
 
   return (
     <div className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 py-6 md:py-10">
@@ -62,23 +55,25 @@ export default function LeaderboardPage() {
         <Trophy className="size-7 shrink-0 text-[var(--accent-gold)] md:size-8" />
       </div>
 
-      {/* Top 3 — horizontal scroll on very small screens, grid on sm+ */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        {[first, second, third].map((entry, idx) => (
-          <Card className="glass-card" key={entry?.userId ?? idx}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl">#{idx + 1}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="truncate font-semibold">{entry?.name ?? "—"}</p>
-              <p className="text-sm text-[var(--text-secondary)]">
-                {entry?.challengesSolved ?? 0} solved
-              </p>
-              <p className="mt-2 text-[var(--accent-gold)]">{entry?.totalScore ?? 0} pts</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Top 3 — only on first page */}
+      {isFirstPage && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {top3.map((entry, idx) => (
+            <Card className="glass-card" key={entry?.userId ?? idx}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">#{idx + 1}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="truncate font-semibold">{entry?.name ?? "—"}</p>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {entry?.challengesSolved ?? 0} solved
+                </p>
+                <p className="mt-2 text-[var(--accent-gold)]">{entry?.totalScore ?? 0} pts</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Card className="glass-card">
         <CardContent className="space-y-2 p-3 md:p-4">
@@ -102,33 +97,117 @@ export default function LeaderboardPage() {
             ))
           )}
 
-          {hasNextPage && (
-            <div className="flex flex-col items-center gap-2 pt-4">
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex flex-col items-center gap-3 pt-4">
+              <div className="flex items-center gap-1">
+                <Button
+                  className="size-8 border-[var(--border)] bg-transparent p-0 text-[var(--text-secondary)] transition-all hover:border-[var(--accent-gold)]/30 hover:bg-[var(--accent-gold-dim)] hover:text-[var(--accent-gold)]"
+                  disabled={page === 1 || isPlaceholderData}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  variant="outline"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+
+                <PaginationNumbers
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  disabled={isPlaceholderData}
+                />
+
+                <Button
+                  className="size-8 border-[var(--border)] bg-transparent p-0 text-[var(--text-secondary)] transition-all hover:border-[var(--accent-gold)]/30 hover:bg-[var(--accent-gold-dim)] hover:text-[var(--accent-gold)]"
+                  disabled={page === totalPages || isPlaceholderData}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  variant="outline"
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
               <p className="text-xs text-[var(--text-secondary)]">
-                Showing {allEntries.length} of {total} participants
+                Page {page} of {totalPages}
               </p>
-              <Button
-                className="gap-2"
-                disabled={isFetchingNextPage}
-                onClick={() => fetchNextPage()}
-                variant="outline"
-              >
-                {isFetchingNextPage ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="size-4" />
-                    Show next {Math.min(PAGE_SIZE, total - allEntries.length)}
-                  </>
-                )}
-              </Button>
             </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function PaginationNumbers({
+  currentPage,
+  totalPages,
+  onPageChange,
+  disabled,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  disabled: boolean;
+}) {
+  const pages = getPageNumbers(currentPage, totalPages);
+
+  return (
+    <>
+      {pages.map((p, i) =>
+        p === "..." ? (
+          <span
+            className="flex size-8 items-center justify-center text-xs text-[var(--text-secondary)]"
+            key={`ellipsis-${i}`}
+          >
+            ...
+          </span>
+        ) : (
+          <Button
+            className={`size-8 p-0 text-xs transition-all ${
+              p === currentPage
+                ? "border-[var(--accent-gold)]/40 bg-[var(--accent-gold-dim)] text-[var(--accent-gold)] shadow-[0_0_12px_rgba(255,214,117,0.15)]"
+                : "border-[var(--border)] bg-transparent text-[var(--text-secondary)] hover:border-[var(--accent-gold)]/30 hover:bg-[var(--accent-gold-dim)] hover:text-[var(--accent-gold)]"
+            }`}
+            disabled={disabled}
+            key={p}
+            onClick={() => onPageChange(p as number)}
+            variant="outline"
+          >
+            {p}
+          </Button>
+        )
+      )}
+    </>
+  );
+}
+
+/** Generates page numbers with ellipsis, e.g. [1, 2, 3, "...", 10] */
+function getPageNumbers(current: number, total: number): (number | "...")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: (number | "...")[] = [];
+
+  // Always show first page
+  pages.push(1);
+
+  if (current > 3) {
+    pages.push("...");
+  }
+
+  // Pages around current
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  if (current < total - 2) {
+    pages.push("...");
+  }
+
+  // Always show last page
+  pages.push(total);
+
+  return pages;
 }

@@ -6,19 +6,17 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetChallenges, useGetLeaderboard, useGetMySubmissions } from "@/api/ramadan.api";
+import { useGetChallenges, useGetMyLeaderboardRank, useGetMySubmissions } from "@/api/ramadan.api";
 import { getCountdownParts, toPktLabel } from "@/lib/ramadan-time";
 
 export default function DashboardHomePage() {
   const { data: challenges = [] } = useGetChallenges();
   const { data: submissions = [] } = useGetMySubmissions();
-  const { data: leaderboardData } = useGetLeaderboard();
+  const { data: myRank } = useGetMyLeaderboardRank();
   const { user } = useUser();
 
   const completed = submissions.length;
   const totalScore = submissions.reduce((sum, item) => sum + item.weightedScore, 0);
-  const leaderboardEntries = leaderboardData?.pages.flatMap((page) => page.entries) ?? [];
-  const me = leaderboardEntries.find((item) => item.userId === user?.id);
   const displayName = user?.fullName || user?.firstName || "Student";
 
   const nextChallenge = useMemo(() => {
@@ -46,7 +44,7 @@ export default function DashboardHomePage() {
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-black/10 p-4">
             <p className="text-sm text-[var(--text-secondary)]">Your Leaderboard Rank</p>
-            <p className="mt-1 font-semibold text-2xl">{me?.rank ?? "-"}</p>
+            <p className="mt-1 font-semibold text-2xl">{myRank?.rank ?? "-"}</p>
           </div>
         </CardContent>
       </Card>

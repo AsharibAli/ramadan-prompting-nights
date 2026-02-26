@@ -116,6 +116,11 @@ export const ramadanRoutes = new Hono()
 
     await next();
   })
+  .get("/leaderboard/me", async (c) => {
+    const userId = getUserId(c);
+    const rank = await ramadanService.getMyRank(userId);
+    return c.json(rank);
+  })
   .post("/generate", zValidator("json", generateSchema), async (c) => {
     const userId = getUserId(c);
     enforceGenerationRateLimit(userId);

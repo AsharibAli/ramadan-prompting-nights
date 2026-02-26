@@ -258,6 +258,7 @@ interface RamadanService {
     multiplier: number;
   }>;
   getMyBestSubmissions: (userId: string) => Promise<SubmissionMeRow[]>;
+  getMyRank: (userId: string) => Promise<{ rank: number; totalScore: number; challengesSolved: number } | null>;
   upsertUser: (params: {
     id: string;
     name: string;
@@ -598,6 +599,40 @@ export const ramadanService: RamadanService = {
       isNewBest,
       attemptNumber,
       multiplier,
+    };
+  },
+
+  async getMyRank(userId: string) {
+    const rows = (await db.execute(sql`
+      with best_per_user_challenge as (
+        select distinct on (s.user_id, s.challenge_id)
+          s.user_id,
+          s.challenge_id,
+          s.weighted_score as best_score
+        from submissions s
+        where s.passed = true
+        order by s.user_id, s.challenge_id, s.weighted_score desc, s.created_at asc
+      ),
+      ranked as (
+        select
+          user_id,
+          sum(best_score) as total_score,
+          count(challenge_id) as challenges_solved,
+          row_number() over (order by sum(best_score) desc, min(best_score) desc) as rank
+        from best_per_user_challenge
+        group by user_id
+      )
+      select rank, total_score as "totalScore", challenges_solved as "challengesSolved"
+      from ranked
+      where user_id = ${userId}
+    `)) as Array<{ rank: number; totalScore: number; challengesSolved: number }>;
+
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      rank: Number(row.rank),
+      totalScore: Number(row.totalScore),
+      challengesSolved: Number(row.challengesSolved),
     };
   },
 
