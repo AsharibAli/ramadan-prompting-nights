@@ -2,6 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardSidebar } from "@/components/ramadan/dashboard-sidebar";
+import { MainFooter } from "@/components/layout/main-footer";
 import { MainHeader } from "@/components/layout/main-header";
 import { useGetChallenges, useGetMySubmissions } from "@/api/ramadan.api";
 
@@ -29,10 +30,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="relative z-10 flex min-h-screen">
       <DashboardSidebar challenges={challenges} submissions={submissions} />
-      <main className="min-w-0 flex-1 px-4 pt-16 pb-8 md:px-8 md:pt-8">
-        <MainHeader />
-        {children}
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main className="flex-1 px-4 pt-16 pb-8 md:px-8 md:pt-8">
+          <MainHeader />
+          {children}
+        </main>
+        <MainFooter force />
+      </div>
     </div>
   );
 }

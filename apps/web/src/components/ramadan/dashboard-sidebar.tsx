@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Lock, Menu, MoonStar, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { Check, Lock, MoonStar, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -27,7 +27,7 @@ function SidebarContent({ challenges, submissions, onToggle }: SidebarContentPro
   }, [submissions]);
 
   return (
-    <div className="flex h-full flex-col border-r border-[var(--border)] bg-[var(--bg-card)]/80 px-3 py-4 backdrop-blur-md">
+    <div className="flex h-full min-h-0 flex-col border-r border-[var(--border)] bg-[var(--bg-card)]/80 px-3 py-4 backdrop-blur-md">
       <div className="mb-4 flex items-center justify-between gap-2 px-2">
         <Link className="flex items-center gap-2" href="/" title="Go to home" aria-label="Go to home">
           <MoonStar className="size-4 shrink-0 text-[var(--accent-gold)]" />
@@ -115,7 +115,7 @@ export function DashboardSidebar({ challenges, submissions }: DashboardSidebarPr
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden h-screen shrink-0 overflow-hidden transition-all duration-200 md:block",
+          "sticky top-0 hidden h-screen shrink-0 overflow-hidden transition-all duration-200 md:block",
           isDesktopOpen ? "w-[280px]" : "w-0"
         )}
       >
@@ -149,11 +149,11 @@ export function DashboardSidebar({ challenges, submissions }: DashboardSidebarPr
               className="size-10 bg-[var(--accent-gold)] text-black hover:bg-[var(--accent-gold)]/90"
               size="icon"
             >
-              <Menu className="size-5" />
+              <PanelLeftOpen className="size-5" />
             </Button>
           </SheetTrigger>
           <SheetContent
-            className="flex w-[80vw] max-w-xs flex-col border-[var(--border)] bg-[var(--bg-secondary)] p-0"
+            className="flex w-[80vw] max-w-xs flex-col border-[var(--border)] bg-[var(--bg-secondary)] p-0 [&>[data-slot=sheet-default-close]]:hidden"
             side="left"
           >
             {/* Visually hidden title for screen readers */}
@@ -171,7 +171,7 @@ export function DashboardSidebar({ challenges, submissions }: DashboardSidebarPr
                 size="icon"
                 variant="ghost"
               >
-                <X className="size-4" />
+                <PanelLeftClose className="size-4" />
               </Button>
             </div>
             {/* Sidebar content without the duplicate header */}
