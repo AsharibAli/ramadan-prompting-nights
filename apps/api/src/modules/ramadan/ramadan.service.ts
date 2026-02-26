@@ -193,11 +193,11 @@ const breakdownCache = createTTLCache<any[]>(CACHE_TTL);
 function createKeyedTTLCache<T>(ttlMs: number) {
   const entries = new Map<string, CacheEntry<T>>();
   return {
-    get(key: string): T | null {
+    get(key: string): T | undefined {
       const entry = entries.get(key);
       if (entry && Date.now() < entry.expiresAt) return entry.data;
       entries.delete(key);
-      return null;
+      return undefined;
     },
     set(key: string, data: T) {
       entries.set(key, { data, expiresAt: Date.now() + ttlMs });
@@ -209,6 +209,7 @@ function createKeyedTTLCache<T>(ttlMs: number) {
 }
 
 const leaderboardCache = createKeyedTTLCache<{ entries: any[]; total: number; hasMore: boolean }>(CACHE_TTL);
+const myRankCache = createKeyedTTLCache<{ rank: number; totalScore: number; challengesSolved: number } | null>(CACHE_TTL);
 
 interface RamadanService {
   getChallengesList: () => Promise<
@@ -585,9 +586,10 @@ export const ramadanService: RamadanService = {
     const [inserted] = await db.insert(submissions).values(payload).returning({ id: submissions.id });
     if (!inserted) throw new BadRequestError("Failed to save submission");
 
-    // Invalidate leaderboard cache after new submission
+    // Invalidate leaderboard caches after new submission
     leaderboardCache.invalidate();
     breakdownCache.invalidate();
+    myRankCache.invalidate();
 
     const isNewBest = !best || weightedScore > best.weightedScore;
     return {
@@ -603,6 +605,9 @@ export const ramadanService: RamadanService = {
   },
 
   async getMyRank(userId: string) {
+    const cached = myRankCache.get(userId);
+    if (cached !== undefined) return cached;
+
     const rows = (await db.execute(sql`
       with best_per_user_challenge as (
         select distinct on (s.user_id, s.challenge_id)
@@ -628,12 +633,17 @@ export const ramadanService: RamadanService = {
     `)) as Array<{ rank: number; totalScore: number; challengesSolved: number }>;
 
     const row = rows[0];
-    if (!row) return null;
-    return {
+    if (!row) {
+      myRankCache.set(userId, null);
+      return null;
+    }
+    const result = {
       rank: Number(row.rank),
       totalScore: Number(row.totalScore),
       challengesSolved: Number(row.challengesSolved),
     };
+    myRankCache.set(userId, result);
+    return result;
   },
 
   async getMyBestSubmissions(userId: string) {
