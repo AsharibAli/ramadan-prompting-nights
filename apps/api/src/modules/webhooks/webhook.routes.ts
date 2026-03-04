@@ -72,7 +72,8 @@ async function handleClerkWebhook(c: Context) {
       return c.text("No email address found", 400);
     }
 
-    const name = [first_name, last_name].filter(Boolean).join(" ").trim() || "GIAIC Student";
+    const emailPrefix = (primaryEmailAddress.split("@")[0] ?? "").replace(/[._+]/g, " ").trim();
+    const name = [first_name, last_name].filter(Boolean).join(" ").trim() || emailPrefix || "GIAIC Student";
 
     try {
       await ramadanService.upsertUser({

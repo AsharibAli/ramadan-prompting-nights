@@ -90,9 +90,11 @@ export const ramadanRoutes = new Hono()
           clerkUser.emailAddresses[0]?.emailAddress ??
           `${userId}@clerk.local`;
 
+        const emailPrefix = (primaryEmail.split("@")[0] ?? "").replace(/[._+]/g, " ").trim();
         const name =
           [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim() ||
           clerkUser.username ||
+          emailPrefix ||
           "GIAIC Student";
 
         await ramadanService.upsertUser({
@@ -103,11 +105,11 @@ export const ramadanRoutes = new Hono()
         });
       } catch (error) {
         logger.warn({ error, userId }, "Could not sync Clerk user details, using fallback profile");
-        await ramadanService.upsertUser({
+        // Only create a fallback profile if user doesn't exist yet — never overwrite a real name
+        await ramadanService.ensureUserExists({
           id: userId,
           name: "GIAIC Student",
           email: `${userId}@clerk.local`,
-          imageUrl: null,
         });
       }
 

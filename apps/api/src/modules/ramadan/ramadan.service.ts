@@ -266,6 +266,11 @@ interface RamadanService {
     email: string;
     imageUrl?: string | null;
   }) => Promise<void>;
+  ensureUserExists: (params: {
+    id: string;
+    name: string;
+    email: string;
+  }) => Promise<void>;
 }
 
 export const ramadanService: RamadanService = {
@@ -719,5 +724,25 @@ export const ramadanService: RamadanService = {
           imageUrl: imageUrl ?? null,
         },
       });
+  },
+
+  /**
+   * Insert user only if they don't exist yet — never overwrites existing data.
+   * Used as a safe fallback when Clerk API fails, to avoid overwriting
+   * a real name with "GIAIC Student".
+   */
+  async ensureUserExists({
+    id,
+    name,
+    email,
+  }: {
+    id: string;
+    name: string;
+    email: string;
+  }) {
+    await db
+      .insert(users)
+      .values({ id, name, email })
+      .onConflictDoNothing({ target: users.id });
   },
 };
