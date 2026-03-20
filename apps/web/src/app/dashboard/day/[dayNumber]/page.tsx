@@ -240,7 +240,7 @@ export default function ChallengeSolverPage() {
           <p className="text-xs text-[var(--text-muted)]">
             Required format: <strong>Goal, Constraints, Edge Cases, Output Format</strong>. 
             <br /><br />
-            Copying scenario text will be rejected (Ramadan mein bhi cheating karogy kya? 😅).
+            Copying scenario text will be rejected.
           </p>
         </CardContent>
       </Card>
