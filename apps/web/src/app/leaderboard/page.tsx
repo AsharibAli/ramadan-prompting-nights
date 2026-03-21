@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 import { useState } from "react";
 import { MainHeader } from "@/components/layout/main-header";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,23 @@ export default function LeaderboardPage() {
   const rest = isFirstPage ? entries.slice(3) : entries;
 
   return (
+    <>
+      {/* Sticky announcement bar */}
+      <section className="sticky top-0 z-50 w-full border-y border-[var(--border)] bg-gradient-to-r from-[#231f4a] via-[#0f2b4a] to-[#0f3f45] px-4 py-2 text-center text-sm text-[var(--text-primary)] backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2">
+          <span className="text-xs sm:text-sm">The results are in! See who won the Ramadan Prompting Nights Challenge |</span>
+          <a
+            className="inline-flex items-center gap-1 font-semibold text-[var(--accent-gold)] underline-offset-4 hover:underline"
+            href="https://asharibali.medium.com/ramadan-prompting-nights-challenge-winners-0b0ee23181f6"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            See Winners
+            <ArrowRight className="size-3.5" />
+          </a>
+        </div>
+      </section>
+
     <div className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 py-6 md:py-10">
       <MainHeader />
 
@@ -134,6 +151,7 @@ export default function LeaderboardPage() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
 
