@@ -1,4 +1,4 @@
-import { newId, newIdWithoutPrefix } from "@repo/id";
+import { newId, newIdWithoutPrefix, newVerificationId } from "@repo/id";
 import {
   boolean,
   index,
@@ -79,6 +79,32 @@ export const submissions = pgTable(
       table.challengeId,
       table.createdAt
     ),
+  })
+);
+
+export const certificates = pgTable(
+  "certificates",
+  {
+    id: varchar("id", { length: 255 })
+      .primaryKey()
+      .$defaultFn(() => newId("cert")),
+    verificationId: varchar("verification_id", { length: 20 })
+      .notNull()
+      .$defaultFn(() => newVerificationId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    userName: text("user_name").notNull(),
+    totalScore: integer("total_score").notNull(),
+    rank: integer("rank").notNull(),
+    challengesCompleted: integer("challenges_completed").notNull(),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    verificationIdUniqueIdx: uniqueIndex("certificates_verification_id_unique_idx").on(
+      table.verificationId
+    ),
+    userIdUniqueIdx: uniqueIndex("certificates_user_id_unique_idx").on(table.userId),
   })
 );
 

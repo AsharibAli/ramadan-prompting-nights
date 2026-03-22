@@ -1,17 +1,20 @@
 import {
   and,
   asc,
+  certificates,
   challenges,
   db,
   desc,
   eq,
   submissions,
   users,
+  type Certificate,
   type NewSubmission,
   sql,
 } from "@repo/db";
+import { newVerificationId } from "@repo/id";
 import { estimateTokens } from "@repo/db";
-import { BadRequestError, ForbiddenError, NotFoundError } from "@/pkg/errors";
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from "@/pkg/errors";
 import { getPromptFormatHint, scorePromptQuality, validateStructuredPrompt } from "./prompt-rules";
 import { getHighestSimilarity } from "./similarity";
 import { validateGeneratedCodeAgainstTests } from "./validation";
@@ -271,6 +274,12 @@ interface RamadanService {
     name: string;
     email: string;
   }) => Promise<void>;
+  getMyCertificate: (userId: string) => Promise<Certificate | null>;
+  issueCertificate: (userId: string) => Promise<Certificate>;
+  verifyCertificate: (verificationId: string) => Promise<{
+    certificate: Certificate;
+    imageUrl: string | null;
+  } | null>;
 }
 
 export const ramadanService: RamadanService = {
@@ -744,5 +753,78 @@ export const ramadanService: RamadanService = {
       .insert(users)
       .values({ id, name, email })
       .onConflictDoNothing({ target: users.id });
+  },
+
+  async getMyCertificate(userId: string) {
+    const [row] = await db
+      .select()
+      .from(certificates)
+      .where(eq(certificates.userId, userId))
+      .limit(1);
+    return row ?? null;
+  },
+
+  async issueCertificate(userId: string) {
+    // Check if certificate already exists
+    const existing = await this.getMyCertificate(userId);
+    if (existing) {
+      throw new ConflictError("Certificate already issued");
+    }
+
+    // Verify user completed all 30 challenges
+    const bestSubmissions = await this.getMyBestSubmissions(userId);
+    if (bestSubmissions.length < 30) {
+      throw new BadRequestError(
+        `Must complete all 30 challenges to earn a certificate. Currently completed: ${bestSubmissions.length}/30`
+      );
+    }
+
+    // Get current rank and score
+    const rankData = await this.getMyRank(userId);
+    const totalScore = rankData?.totalScore ?? 0;
+    const rank = rankData?.rank ?? 0;
+
+    // Get user name for snapshot
+    const [user] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const userName = user?.name ?? "GIAIC Student";
+
+    const [cert] = await db
+      .insert(certificates)
+      .values({
+        userId,
+        userName,
+        totalScore,
+        rank,
+        challengesCompleted: bestSubmissions.length,
+        verificationId: newVerificationId(),
+      })
+      .returning();
+
+    if (!cert) throw new BadRequestError("Failed to issue certificate");
+    return cert;
+  },
+
+  async verifyCertificate(verificationId: string) {
+    const rows = await db
+      .select({
+        certificate: certificates,
+        imageUrl: users.imageUrl,
+      })
+      .from(certificates)
+      .innerJoin(users, eq(certificates.userId, users.id))
+      .where(eq(certificates.verificationId, verificationId))
+      .limit(1);
+
+    const row = rows[0];
+    if (!row) return null;
+
+    return {
+      certificate: row.certificate,
+      imageUrl: row.imageUrl,
+    };
   },
 };

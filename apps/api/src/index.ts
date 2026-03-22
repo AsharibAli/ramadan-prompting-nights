@@ -8,6 +8,7 @@ import { prettyJSON } from "hono/pretty-json";
 import { chatRoutes } from "@/modules/chat/chat-stream.routes";
 import { chatsRoutes } from "@/modules/chat/chats.routes";
 import { postRoutes } from "@/modules/posts";
+import { certificateRoutes } from "@/modules/ramadan/certificate.routes";
 import { ramadanRoutes } from "@/modules/ramadan/ramadan.routes";
 import { webhookRoutes } from "@/modules/webhooks/webhook.routes";
 
@@ -90,6 +91,7 @@ const routes = app
   .route("/posts", postRoutes)
   .route("/chat", chatRoutes)
   .route("/chats", chatsRoutes)
+  .route("/certificates", certificateRoutes)
   .route("/", ramadanRoutes);
 
 export type AppType = typeof routes;

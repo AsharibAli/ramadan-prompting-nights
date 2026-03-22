@@ -15,6 +15,13 @@
       "when": 1771597433960,
       "tag": "0002_nostalgic_songbird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1774172702767,
+      "tag": "0003_short_marten_broadcloak",
+      "breakpoints": true
     }
   ]
 }

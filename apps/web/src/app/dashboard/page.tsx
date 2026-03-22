@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGetChallenges, useGetMyLeaderboardRank, useGetMySubmissions } from "@/api/ramadan.api";
+import { CertificateCard } from "@/components/ramadan/certificate-card";
 import { getCountdownParts, toPktLabel } from "@/lib/ramadan-time";
 
 export default function DashboardHomePage() {
@@ -48,6 +49,8 @@ export default function DashboardHomePage() {
           </div>
         </CardContent>
       </Card>
+
+      <CertificateCard />
 
       {nextChallenge ? (
         <Card className="glass-card">

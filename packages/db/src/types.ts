@@ -12,6 +12,9 @@ export type NewChallenge = InferInsertModel<typeof schema.challenges>;
 export type Submission = InferSelectModel<typeof schema.submissions>;
 export type NewSubmission = InferInsertModel<typeof schema.submissions>;
 
+export type Certificate = InferSelectModel<typeof schema.certificates>;
+export type NewCertificate = InferInsertModel<typeof schema.certificates>;
+
 export type Post = InferSelectModel<typeof schema.posts>;
 export type NewPost = InferInsertModel<typeof schema.posts>;
 
@@ -47,6 +50,12 @@ export const chatMessageInsertSchema = createInsertSchema(schema.chatMessages).o
   chatId: true,
 });
 export const chatMessageSelectSchema = createSelectSchema(schema.chatMessages);
+
+export const certificateInsertSchema = createInsertSchema(schema.certificates).omit({
+  userId: true,
+  verificationId: true,
+});
+export const certificateSelectSchema = createSelectSchema(schema.certificates);
 
 export const postInsertSchema = createInsertSchema(schema.posts).omit({ userId: true });
 export const postSelectSchema = createSelectSchema(schema.posts);
