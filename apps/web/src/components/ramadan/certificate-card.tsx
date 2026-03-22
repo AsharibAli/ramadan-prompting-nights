@@ -91,10 +91,11 @@ export function CertificateCard() {
       }
     };
 
-    const handleCopy = async () => {
+    const handleOpenVerify = async () => {
       const fullUrl = `${window.location.origin}${verifyUrl}`;
       await navigator.clipboard.writeText(fullUrl);
       toast.success("Verification link copied!");
+      window.open(fullUrl, "_blank");
     };
 
     return (
@@ -135,9 +136,9 @@ export function CertificateCard() {
               )}
               Download PDF
             </Button>
-            <Button variant="outline" onClick={handleCopy}>
+            <Button variant="outline" onClick={handleOpenVerify}>
               <ExternalLink className="mr-2 size-4" />
-              Copy Verification Link
+              Open Verification Link
             </Button>
           </div>
         </CardContent>

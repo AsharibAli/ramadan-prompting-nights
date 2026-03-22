@@ -17,51 +17,79 @@ export function generateCertificatePdf(cert: Certificate): ArrayBuffer {
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, w, h, "F");
 
-  // ── Double border ─────────────────────────────────────────────────
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.6);
-  doc.rect(8, 8, w - 16, h - 16);
-
-  doc.setDrawColor(210, 210, 210);
-  doc.setLineWidth(0.3);
-  doc.rect(12, 12, w - 24, h - 24);
-
-  // ── Corner accents ────────────────────────────────────────────────
-  const cornerLen = 12;
-  const co = 8;
-  doc.setDrawColor(ACCENT.r, ACCENT.g, ACCENT.b);
-  doc.setLineWidth(0.6);
-  // Top-left
-  doc.line(co, co, co + cornerLen, co);
-  doc.line(co, co, co, co + cornerLen);
-  // Top-right
-  doc.line(w - co, co, w - co - cornerLen, co);
-  doc.line(w - co, co, w - co, co + cornerLen);
-  // Bottom-left
-  doc.line(co, h - co, co + cornerLen, h - co);
-  doc.line(co, h - co, co, h - co - cornerLen);
-  // Bottom-right
-  doc.line(w - co, h - co, w - co - cornerLen, h - co);
-  doc.line(w - co, h - co, w - co, h - co - cornerLen);
+  // ── Single clean border ──────────────────────────────────────────
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.4);
+  doc.rect(5, 5, w - 10, h - 10);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // Content — vertically centered
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  let y = 34;
+  let y = 22;
+
+  // ── RPN Logo (moon crescent + star) ───────────────────────────────
+  // Matches the SVG: viewBox 0 0 64 64
+  // <circle cx="30" cy="35" r="16" fill="#ffd675"/>  (gold moon)
+  // <circle cx="36" cy="31" r="14" fill="#0a0e27"/>  (dark cutout → crescent)
+  // <path d="M46 14l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/> (4-point star)
+  const logoSize = 14;
+  const s = logoSize / 64; // scale factor
+  const lx = cx - logoSize / 2; // logo origin X
+  const ly = y; // logo origin Y
+  const logoCx = cx;
+  const logoCy = ly + logoSize / 2;
+
+  // Dark circular background (full circle)
+  doc.setFillColor(10, 14, 39); // #0a0e27
+  doc.circle(logoCx, logoCy, logoSize / 2, "F");
+
+  // Gold moon circle — cx=30 cy=35 r=16 in SVG coords
+  doc.setFillColor(255, 214, 117); // #ffd675
+  doc.circle(lx + 30 * s, ly + 35 * s, 16 * s, "F");
+
+  // Dark cutout circle — cx=36 cy=31 r=14 in SVG coords
+  doc.setFillColor(10, 14, 39);
+  doc.circle(lx + 36 * s, ly + 31 * s, 14 * s, "F");
+
+  // 4-point star — SVG path: M46 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 z
+  // Points: (46,14)→(48,19)→(53,21)→(48,23)→(46,28)→(44,23)→(39,21)→(44,19)
+  doc.setFillColor(255, 214, 117);
+  const sx = lx + 46 * s;
+  const sy = ly + 14 * s;
+  // lines() takes relative deltas from the starting point
+  doc.lines(
+    [
+      [2 * s, 5 * s],
+      [5 * s, 2 * s],
+      [-5 * s, 2 * s],
+      [-2 * s, 5 * s],
+      [-2 * s, -5 * s],
+      [-5 * s, -2 * s],
+      [5 * s, -2 * s],
+      [2 * s, -5 * s],
+    ],
+    sx,
+    sy,
+    [1, 1],
+    "F",
+    true
+  );
+
+  y += logoSize + 8;
 
   // ── Branding: "Ramadan Prompting Nights" ──────────────────────────
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(ACCENT.r, ACCENT.g, ACCENT.b);
   doc.text("Ramadan Prompting Nights", cx, y, { align: "center" });
-  y += 12;
+  y += 10;
 
   // ── Top accent line ───────────────────────────────────────────────
   doc.setDrawColor(ACCENT.r, ACCENT.g, ACCENT.b);
   doc.setLineWidth(0.8);
   doc.line(cx - 50, y, cx + 50, y);
-  y += 16;
+  y += 14;
 
   // ── "CERTIFICATE OF COMPLETION" ───────────────────────────────────
   doc.setFont("helvetica", "bold");
