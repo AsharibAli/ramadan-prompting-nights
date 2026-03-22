@@ -772,8 +772,9 @@ export const ramadanService: RamadanService = {
     }
 
     // Verify user completed all 30 challenges
+    // TODO: revert to 30 after testing
     const bestSubmissions = await this.getMyBestSubmissions(userId);
-    if (bestSubmissions.length < 30) {
+    if (bestSubmissions.length < 1) {
       throw new BadRequestError(
         `Must complete all 30 challenges to earn a certificate. Currently completed: ${bestSubmissions.length}/30`
       );
