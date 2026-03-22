@@ -26,7 +26,7 @@ export function generateCertificatePdf(cert: Certificate): ArrayBuffer {
   // Content — vertically centered
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  let y = 22;
+  let y = 14;
 
   // ── RPN Logo (moon crescent + star) ───────────────────────────────
   // Matches the SVG: viewBox 0 0 64 64
