@@ -29,7 +29,7 @@ export const certificateRoutes = new Hono()
     const certificate = await ramadanService.getMyCertificate(userId);
     const submissions = await ramadanService.getMyBestSubmissions(userId);
     const eligible = submissions.length >= 30;
-    return c.json({ certificate, eligible }, 200);
+    return c.json({ certificate, eligible, completedCount: submissions.length }, 200);
   })
   .post("/", async (c) => {
     const userId = getUserId(c);

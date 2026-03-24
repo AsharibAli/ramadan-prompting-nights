@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Download, ExternalLink, Loader2 } from "lucide-react";
+import { Award, Download, ExternalLink, Loader2, Lock } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,8 @@ export function CertificateCard() {
   const certificate = data?.certificate;
   const eligible = data?.eligible ?? false;
 
+  const completedCount = data?.completedCount ?? 0;
+
   // Not eligible - show progress
   if (!eligible && !certificate) {
     return (
@@ -31,10 +33,14 @@ export function CertificateCard() {
             Certificate
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex items-center justify-between">
           <p className="text-[var(--text-secondary)]">
             Complete all 30 challenges to earn your certificate of completion.
           </p>
+          <Button variant="outline" disabled className="shrink-0 cursor-not-allowed opacity-70">
+            <Lock className="mr-2 size-4" />
+            Not Eligible {completedCount}/30
+          </Button>
         </CardContent>
       </Card>
     );

@@ -22,6 +22,7 @@ type CertificateData = {
 export type MyCertificateResponse = {
   certificate: CertificateData | null;
   eligible: boolean;
+  completedCount: number;
 };
 
 export type VerifyCertificateResponse =
